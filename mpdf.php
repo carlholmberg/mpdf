@@ -59,6 +59,12 @@ if (!defined('PHP_VERSION_ID')) {
 
 require_once('classes/helpers.php');
 
+// Create the $chrs and $ords global variables
+for ($i=0; $i<256; $i++) {
+	$chrs[$i] = chr($i);
+	$rds[chr($i)] = $i;
+}
+
 class mPDF
 {
 
@@ -1407,11 +1413,6 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	$this->usecss=true;
 	$this->usepre=true;
 
-	for($i=0;$i<256;$i++) {
-		$this->chrs[$i] = chr($i);
-		$this->ords[chr($i)] = $i;
-
-	}
 
 /*-- IMPORTS --*/
 
@@ -2658,8 +2659,8 @@ function GetStringWidth($s, $addSubset=true) {
 			else {
 				$l = strlen($s);
 				for($i=0; $i<$l; $i++) {
-					// Soft Hyphens chr(173)
-					if ($s[$i] == chr(173) && $this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') { 
+					// Soft Hyphens "\xad"
+					if ($s[$i] == "\xad" && $this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') { 
 						continue;
 					}
 					else if ($this->S && isset($this->upperCase[ord($s[$i])])) { 
@@ -3199,12 +3200,12 @@ function Text($x,$y,$txt) {
 
 	$this->CurrentFont['used']= true;
 	if ($this->CurrentFont['type']=='TTF' && ($this->CurrentFont['sip'] || $this->CurrentFont['smp'])) {
-	      $txt2 = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$txt);
+	      $txt2 = str_replace("\xc2\xa0","\x20",$txt);
 		$txt2 = $this->UTF8toSubset($txt2);
 		$s.=sprintf('BT '.$aix.' %s Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$txt2);
 	}
 	else if (!$this->onlyCoreFonts && !$this->usingCoreFont) {
-	      $txt2 = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$txt); 
+	      $txt2 = str_replace("\xc2\xa0","\x20",$txt); 
 		$this->UTF8StringToArray($txt2);	// this is just to add chars to subset list
 		if ($this->kerning && $this->useKerning) { $s .= $this->_kern($txt2, '', $aix, $x, $y); }
 		else {
@@ -3214,7 +3215,7 @@ function Text($x,$y,$txt) {
 		}
 	}
 	else {
-	      $txt2 = str_replace($this->chrs[160],$this->chrs[32],$txt);
+	      $txt2 = str_replace("\xa0","\x20",$txt);
 		if ($this->kerning && $this->useKerning) { $s .= $this->_kern($txt2, '', $aix, $x, $y); }
 		else {
 			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$this->_escape($txt2));
@@ -3328,10 +3329,10 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
 	// Expects input to be mb_encoded if necessary and RTL reversed
 	// NON_BREAKING SPACE
 	if ($this->usingCoreFont) {
-	      $txt = str_replace($this->chrs[160],$this->chrs[32],$txt);
+	      $txt = str_replace("\xa0","\x20",$txt);
 	}
 	else {
-	      $txt = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$txt);
+	      $txt = str_replace("\xc2"."\xa0","\x20",$txt);
 	}
 
 	$k=MPDF_K;
@@ -3880,7 +3881,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='',$fill=0,$link='',$directionali
 					// JUSTIFY J using Unicode fonts (Word spacing doesn't work)
 					// WORD SPACING UNICODE
 					// Change NON_BREAKING SPACE to spaces so they are 'spaced' properly
-					$tmp = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$tmp ); 
+					$tmp = str_replace("\xc2"."\xa0","\x20",$tmp ); 
 					$len_ligne = $this->GetStringWidth($tmp );
 					$nb_carac = mb_strlen( $tmp , $this->mb_enc ) ;  
 					$nb_spaces = mb_substr_count( $tmp ,' ', $this->mb_enc ) ;  
@@ -3959,7 +3960,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='',$fill=0,$link='',$directionali
 					// JUSTIFY J using Unicode fonts (Word spacing doesn't work)
 					// WORD SPACING NON_UNICDOE/CJK
 					// Change NON_BREAKING SPACE to spaces so they are 'spaced' properly
-					$tmp = str_replace($this->chrs[160],$this->chrs[32],$tmp);
+					$tmp = str_replace("\xa0","\x20",$tmp);
 					$len_ligne = $this->GetStringWidth($tmp );
 					$nb_carac = strlen( $tmp ) ;  
 					$nb_spaces = substr_count( $tmp ,' ' ) ;  
@@ -4087,7 +4088,7 @@ function Write($h,$txt,$currentx=0,$link='',$directionality='ltr',$align='') {
 						// JUSTIFY J using Unicode fonts (Word spacing doesn't work)
 						// WORD SPACING
 						// Change NON_BREAKING SPACE to spaces so they are 'spaced' properly
-					      $tmp = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$tmp ); 
+					      $tmp = str_replace("\xc2"."\xa0","\x20",$tmp ); 
 						$len_ligne = $this->GetStringWidth($tmp );
 						$nb_carac = mb_strlen( $tmp , $this->mb_enc ) ;  
 						$nb_spaces = mb_substr_count( $tmp ,' ', $this->mb_enc ) ;  
@@ -4170,7 +4171,7 @@ function Write($h,$txt,$currentx=0,$link='',$directionality='ltr',$align='') {
 						// JUSTIFY J using Unicode fonts (Word spacing doesn't work)
 						// WORD SPACING
 						// Change NON_BREAKING SPACE to spaces so they are 'spaced' properly
-					      $tmp = str_replace($this->chrs[160],$this->chrs[32],$tmp );
+					      $tmp = str_replace("\xa0","\x20",$tmp );
 						$len_ligne = $this->GetStringWidth($tmp );
 						$nb_carac = strlen( $tmp ) ;  
 						$nb_spaces = substr_count( $tmp ,' ' ) ;  
@@ -4570,13 +4571,13 @@ function finishFlowingBlock($endofblock=false, $next='') {
 		{
               $this->restoreFont( $font[ $k ],false );
 		  if (!isset($this->objectbuffer[$k])) { 
-			// Soft Hyphens chr(173)
+			// Soft Hyphens "\xad"
 			if (!$this->usingCoreFont) {
 			      $content[$k] = $chunk = str_replace("\xc2\xad",'',$chunk ); 
 				if (isset($this->CurrentFont['indic']) && $this->CurrentFont['indic']) {  $checkCursive=true; }	// *INDIC*
 			}
 			else if ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') {
-			      $content[$k] = $chunk = str_replace($this->chrs[173],'',$chunk );
+			      $content[$k] = $chunk = str_replace("\xad",'',$chunk );
 			}
 			// Special case of sub/sup carried over on its own to last line
 			if (($this->SUB || $this->SUP) && count($content)==1) { $actfs = $this->FontSize*100/55; } // 55% is font change for sub/sup
@@ -4792,10 +4793,10 @@ function finishFlowingBlock($endofblock=false, $next='') {
 		foreach ( $content as $k => $chunk ) {
 			if (!isset($this->objectbuffer[$k]) || (isset($this->objectbuffer[$k]) && !$this->objectbuffer[$k])) {
 				if ($this->usingCoreFont) {
-				      $chunk = str_replace($this->chrs[160],$this->chrs[32],$chunk );
+				      $chunk = str_replace("\xa0","\x20",$chunk );
 				}
 				else {
-				      $chunk = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$chunk ); 
+				      $chunk = str_replace("\xc2"."\xa0","\x20",$chunk ); 
 				}
 				$nb_carac += mb_strlen( $chunk, $this->mb_enc );  
 				$nb_spaces += mb_substr_count( $chunk,' ', $this->mb_enc );  
@@ -5427,7 +5428,7 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 			  }
 			  else {
 			  	$this->SetFont('czapfdingbats','',0);
-			  	$this->Cell(($this->FontSize*1.4),$h,$this->chrs[116],1,0,'C',1,'',0,0,0, 'M') ;
+			  	$this->Cell(($this->FontSize*1.4),$h,"\x74",1,0,'C',1,'',0,0,0, 'M') ;
 			  }
 			  $this->SetFont($save_font,'',0);
            		  $this->currentfontfamily = $save_currentfont;
@@ -5737,8 +5738,8 @@ function WriteFlowingBlock( $s)
 	// get the width of the character in points
 	if ($this->usingCoreFont) {
        	$c = $s[$i];
-		// Soft Hyphens chr(173)
-		if ($c == chr(173) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) { $cw = 0;  }
+		// Soft Hyphens "\xad"
+		if ($c == "\xad" && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) { $cw = 0;  }
 		else { 
 			$cw = ($this->GetStringWidth($c) * MPDF_K);	// (so adjust for letter/word spacing)
 			if ($this->kerning && $this->useKerning && $i > 0) {
@@ -5831,8 +5832,8 @@ function WriteFlowingBlock( $s)
 		$currWord = $words[count($words)-1] ;
 		$success = false;
 /*-- HYPHENATION --*/
-		// Soft Hyphens chr(173)
-		if ((!$this->usingCoreFont && preg_match("/\xc2\xad/",$currWord)) || ($this->usingCoreFont && preg_match("/".chr(173)."/",$currWord) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) ) {
+		// Soft Hyphens "\xad"
+		if ((!$this->usingCoreFont && preg_match("/\xc2\xad/",$currWord)) || ($this->usingCoreFont && preg_match("/"."\xad"."/",$currWord) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) ) {
 			$rem = $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) );
 			list($success,$pre,$post,$prelength) = $this->softHyphenate($currWord, (($rem-$cutoffWidth)/MPDF_K -$this->GetStringWidth(" ")) );
 		}
@@ -6018,9 +6019,9 @@ function WriteFlowingBlock( $s)
 			      $content[$k] = $chunk = str_replace("\xc2\xad",'',$chunk ); 
 				if (isset($this->CurrentFont['indic']) && $this->CurrentFont['indic']) {  $checkCursive=true; }	// *INDIC*
 			}
-			// Soft Hyphens chr(173)
+			// Soft Hyphens "\xad"
 			else if ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') {
-			      $content[$k] = $chunk = str_replace($this->chrs[173],'',$chunk );
+			      $content[$k] = $chunk = str_replace("\xad",'',$chunk );
 			}
 			$contentWidth += $this->GetStringWidth( $chunk ) * MPDF_K; 
 			if (!$lhfixed) { $maxlineHeight = max($maxlineHeight,$this->FontSize * $this->lineheight_correction ); }
@@ -6112,10 +6113,10 @@ function WriteFlowingBlock( $s)
 		foreach ( $content as $k => $chunk ) {
 			if (!isset($this->objectbuffer[$k]) || (isset($this->objectbuffer[$k]) && !$this->objectbuffer[$k])) {
 				if ($this->usingCoreFont) {
-				      $content[$k] = str_replace($this->chrs[160],$this->chrs[32],$chunk );
+				      $content[$k] = str_replace("\xa0","\x20",$chunk );
 				}
 				else {
-				      $content[$k] = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$chunk ); 
+				      $content[$k] = str_replace("\xc2"."\xa0","\x20",$chunk ); 
 					if ($checkCursive) {
 						if (preg_match("/([".$this->pregRTLchars."])/u", $chunk)) { $inclCursive = true; }	// *RTL*
 						if (preg_match("/([".$this->pregHIchars.$this->pregBNchars.$this->pregPAchars."])/u", $chunk)) { $inclCursive = true; }	// *INDIC*
@@ -7311,7 +7312,7 @@ function _begindoc()
 	//Start document
 	$this->state=1;
 	$this->_out('%PDF-'.$this->pdf_version);
-	$this->_out('%'.chr(226).chr(227).chr(207).chr(211));	// 4 chars > 128 to show binary file
+	$this->_out('%'."\xe2"."\xe3"."\xcf"."\xd3");	// 4 chars > 128 to show binary file
 }
 
 
@@ -8781,7 +8782,7 @@ function _putmetadata() {
 			mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)  );
 
 
-	$m = '<?xpacket begin="'.chr(239).chr(187).chr(191).'" id="W5M0MpCehiHzreSzNTczkc9d"?>'."\n";	// begin = FEFF BOM
+	$m = '<?xpacket begin="'."\xef\xbb\xbf".'" id="W5M0MpCehiHzreSzNTczkc9d"?>'."\n";	// begin = FEFF BOM
 	$m .= ' <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="3.1-701">'."\n";
 	$m .= '  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'."\n";
 	$m .= '   <rdf:Description rdf:about="uuid:'.$uuid.'" xmlns:pdf="http://ns.adobe.com/pdf/1.3/">'."\n";
@@ -9452,6 +9453,7 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 		$data = $this->$v[1];
 		$file = md5($data);
 	}
+	global $ords;
 	$ppUx = 0;
 	if ($firsttime && preg_match('/(.*\/)([^\/]*)/',$file,$fm)) {
 		if (strlen($fm[2])) { $file = $fm[1].preg_replace('/ /','%20',$fm[2]); }
@@ -9575,7 +9577,7 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 	// PNG
 	else if ($type == 'png') {
 		//Check signature
-		if(substr($data,0,8)!=$this->chrs[137].'PNG'.$this->chrs[13].$this->chrs[10].$this->chrs[26].$this->chrs[10]) { 
+		if(substr($data,0,8)!="\x89".'PNG'."\xd\xa\x1a\xa") { 
 			return $this->_imageError($file, $firsttime, 'Error parsing PNG identifier'); 
 		}
 		//Read header chunk
@@ -9585,19 +9587,19 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 
 		$w=$this->_fourbytes2int(substr($data,16,4));
 		$h=$this->_fourbytes2int(substr($data,20,4));
-		$bpc=$this->ords[substr($data,24,1)];
+		$bpc=$ords[substr($data,24,1)];
 		$errpng = false;
 		$pngalpha = false; 
 		if($bpc>8) { $errpng = 'not 8-bit depth'; }
-		$ct=$this->ords[substr($data,25,1)];
+		$ct=$ords[substr($data,25,1)];
 		if($ct==0) { $colspace='DeviceGray'; }
 		elseif($ct==2) { $colspace='DeviceRGB'; }
 		elseif($ct==3) { $colspace='Indexed'; }
 		elseif($ct==4) { $colspace='DeviceGray';  $errpng = 'alpha channel'; $pngalpha = true; }
 		else { $colspace='DeviceRGB'; $errpng = 'alpha channel'; $pngalpha = true; } 
-		if($this->ords[substr($data,26,1)]!=0) { $errpng = 'compression method'; }
-		if($this->ords[substr($data,27,1)]!=0) { $errpng = 'filter method'; }
-		if($this->ords[substr($data,28,1)]!=0) { $errpng = 'interlaced file'; }
+		if($ords[substr($data,26,1)]!=0) { $errpng = 'compression method'; }
+		if($ords[substr($data,27,1)]!=0) { $errpng = 'filter method'; }
+		if($ords[substr($data,28,1)]!=0) { $errpng = 'interlaced file'; }
 		$j = strpos($data,'pHYs');
 		if ($j) { 
 			//Read resolution
@@ -9774,11 +9776,11 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 				elseif($type=='tRNS') {
 					//Read transparency info
 					$t=substr($data,$p,$n);	$p += $n;
-					if($ct==0) $trns=array($this->ords[substr($t,1,1)]);
-					elseif($ct==2) $trns=array($this->ords[substr($t,1,1)],$this->ords[substr($t,3,1)],$this->ords[substr($t,5,1)]);
+					if($ct==0) $trns=array($ords[substr($t,1,1)]);
+					elseif($ct==2) $trns=array($ords[substr($t,1,1)],$ords[substr($t,3,1)],$ords[substr($t,5,1)]);
 					else
 					{
-						$pos=strpos($t,$this->chrs[0]);
+						$pos=strpos($t,"\x0");
 						if(is_int($pos)) $trns=array($pos);
 					}
 					$p += 4;
@@ -10267,6 +10269,7 @@ function _convImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask) {
 	if ($this->PDFA || $this->PDFX) { $mask=false; }
 	$im = @imagecreatefromstring($data);
 	$info = array();
+	global $ords;
 	if ($im) {
 		$imgdata = '';
 		$mimgdata = '';
@@ -10280,11 +10283,11 @@ function _convImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask) {
 			$n=$this->_fourbytes2int(substr($data,($p-4),4));
 			$t = substr($data,($p+4),$n);	
 			if ($colspace=='DeviceGray') { 
-				$trns=array($this->ords[substr($t,1,1)]); 
+				$trns=array($ords[substr($t,1,1)]); 
 				$trnsrgb = array($trns[0],$trns[0],$trns[0]);
 			}
 			else if ($colspace=='DeviceRGB') { 
-				$trns=array($this->ords[substr($t,1,1)],$this->ords[substr($t,3,1)],$this->ords[substr($t,5,1)]); 
+				$trns=array($ords[substr($t,1,1)],$ords[substr($t,3,1)],$ords[substr($t,5,1)]); 
 				$trnsrgb = $trns;
 				if ($targetcs=='DeviceCMYK') {
 					$col = Color::rgb2cmyk(array(3,$trns[0],$trns[1],$trns[2]));
@@ -10300,7 +10303,7 @@ function _convImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask) {
 				}
 			}
 			else {	// Indexed
-				$pos = strpos($t,$this->chrs[0]);
+				$pos = strpos($t,"\x0");
 				if (is_int($pos)) {
 					$pal = imagecolorsforindex($im, $pos);
 					$r = $pal['red'];
@@ -10415,11 +10418,11 @@ function rle8_decode ($str, $width){
                 switch (ord($str[$i])){
                     case 0: # NEW LINE
                          $padCnt = $lineWidth - strlen($out)%$lineWidth;
-                        if ($padCnt<$lineWidth) $out .= str_repeat(chr(0), $padCnt); # pad line
+                        if ($padCnt<$lineWidth) $out .= str_repeat("\x0", $padCnt); # pad line
                         break;
                     case 1: # END OF FILE
                         $padCnt = $lineWidth - strlen($out)%$lineWidth;
-                        if ($padCnt<$lineWidth) $out .= str_repeat(chr(0), $padCnt); # pad line
+                        if ($padCnt<$lineWidth) $out .= str_repeat("\x0", $padCnt); # pad line
                          break 3;
                     case 2: # DELTA
                         $i += 2;
@@ -10584,11 +10587,11 @@ function _imageTypeFromString(&$data) {
 	else if (substr($data, 0, 6)== "GIF87a" || substr($data, 0, 6)== "GIF89a") { 
 		$type = 'gif';
 	}
-	else if (substr($data, 0, 8)== chr(137).'PNG'.chr(13).chr(10).chr(26).chr(10)) { 
+	else if (substr($data, 0, 8)== "\x89".'PNG'."\xd\xa\x1a\xa") { 
 		$type = 'png';
 	}
 /*-- IMAGES-WMF --*/
-	else if (substr($data, 0, 4)== chr(215).chr(205).chr(198).chr(154)) { 
+	else if (substr($data, 0, 4)== "\xd7\xcd\xc6\x9a") { 
 		$type = 'wmf';
 	}
 /*-- END IMAGES-WMF --*/
@@ -10667,11 +10670,12 @@ function _putformobjects() {
 
 function _freadint($f)
 {
+	global $ords;
 	//Read a 4-byte integer from file
-	$i=$this->ords[fread($f,1)]<<24;
-	$i+=$this->ords[fread($f,1)]<<16;
-	$i+=$this->ords[fread($f,1)]<<8;
-	$i+=$this->ords[fread($f,1)];
+	$i=$ords[fread($f,1)]<<24;
+	$i+=$ords[fread($f,1)]<<16;
+	$i+=$ords[fread($f,1)]<<8;
+	$i+=$ords[fread($f,1)];
 	return $i;
 }
 
@@ -10697,8 +10701,8 @@ function _textstring($s) {
 
 function _escape($s)
 {
-	// the chr(13) substitution fixes the Bugs item #1421290.
-	return strtr($s, array(')' => '\\)', '(' => '\\(', '\\' => '\\\\', $this->chrs[13] => '\r'));
+	// the "\xd" substitution fixes the Bugs item #1421290.
+	return strtr($s, array(')' => '\\)', '(' => '\\(', '\\' => '\\\\', "\xd" => '\r'));
 }
 
 function _putstream($s) {
@@ -11333,18 +11337,19 @@ function Shaded_box( $text,$font='',$fontstyle='B',$szfont='',$width='70%',$styl
 function UTF8StringToArray($str, $addSubset=true) {
    $out = array();
    $len = strlen($str);
+   global $ords;
    for ($i = 0; $i < $len; $i++) {
 	$uni = -1;
-      $h = ord($str[$i]);
+      $h = $ords[$str[$i]];
       if ( $h <= 0x7F )
          $uni = $h;
       elseif ( $h >= 0xC2 ) {
          if ( ($h <= 0xDF) && ($i < $len -1) )
-            $uni = ($h & 0x1F) << 6 | (ord($str[++$i]) & 0x3F);
+            $uni = ($h & 0x1F) << 6 | ($ords[$str[++$i]] & 0x3F);
          elseif ( ($h <= 0xEF) && ($i < $len -2) )
-            $uni = ($h & 0x0F) << 12 | (ord($str[++$i]) & 0x3F) << 6 | (ord($str[++$i]) & 0x3F);
+            $uni = ($h & 0x0F) << 12 | ($ords[$str[++$i]] & 0x3F) << 6 | ($ords[$str[++$i]] & 0x3F);
          elseif ( ($h <= 0xF4) && ($i < $len -3) )
-            $uni = ($h & 0x0F) << 18 | (ord($str[++$i]) & 0x3F) << 12 | (ord($str[++$i]) & 0x3F) << 6 | (ord($str[++$i]) & 0x3F);
+            $uni = ($h & 0x0F) << 18 | ($ords[$str[++$i]] & 0x3F) << 12 | ($ords[$str[++$i]] & 0x3F) << 6 | ($ords[$str[++$i]] & 0x3F);
       }
 	if ($uni >= 0) {
 		$out[] = $uni;
@@ -11359,8 +11364,8 @@ function UTF8StringToArray($str, $addSubset=true) {
 //Convert utf-8 string to <HHHHHH> for Font Subsets
 function UTF8toSubset($str) {
 	$ret = '<';
-	$str = preg_replace('/'.preg_quote($this->aliasNbPg,'/').'/', chr(7), $str );
-	$str = preg_replace('/'.preg_quote($this->aliasNbPgGp,'/').'/', chr(8), $str );
+	$str = preg_replace('/'.preg_quote($this->aliasNbPg,'/').'/', "\x7", $str );
+	$str = preg_replace('/'.preg_quote($this->aliasNbPgGp,'/').'/', "\x8", $str );
 	$unicode = $this->UTF8StringToArray($str);
 	$orig_fid = $this->CurrentFont['subsetfontids'][0];
 	$last_fid = $this->CurrentFont['subsetfontids'][0];
@@ -11418,11 +11423,11 @@ function UTF8ToUTF16BE($str, $setbom=true) {
 	if ($this->checkSIP && preg_match("/([\x{20000}-\x{2FFFF}])/u", $str)) { 
 	   if (!in_array($this->currentfontfamily, array('gb','big5','sjis','uhc','gbB','big5B','sjisB','uhcB','gbI','big5I','sjisI','uhcI',
 		'gbBI','big5BI','sjisBI','uhcBI'))) {
-		$str = preg_replace("/[\x{20000}-\x{2FFFF}]/u", chr(0), $str);
+		$str = preg_replace("/[\x{20000}-\x{2FFFF}]/u", "\x0", $str);
 	   }
 	}
 	if ($this->checkSMP && preg_match("/([\x{10000}-\x{1FFFF}])/u", $str )) { 
-		$str = preg_replace("/[\x{10000}-\x{1FFFF}]/u", chr(0), $str );
+		$str = preg_replace("/[\x{10000}-\x{1FFFF}]/u", "\x0", $str );
 	}
 	$outstr = ""; // string to be returned
 	if ($setbom) {
@@ -13179,12 +13184,12 @@ function softHyphenate($word, $maxWidth) {
 		$wl = mb_strlen($word,'UTF-8');
 	}
 	while($offset < $wl) {
-		// Soft Hyphens chr(173)
+		// Soft Hyphens "\xad"
 		if (!$this->usingCoreFont) { 
 			$p = mb_strpos($word, "\xc2\xad", $offset, 'UTF-8');
 		}
 		else if ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') {
-			$p = strpos($word, chr(173), $offset);
+			$p = strpos($word, "\xad", $offset);
 		}
 		if ($p !== false) { $poss[] = $p - count($poss); }
 		else { break; }
@@ -13549,7 +13554,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 	else { $this->checkCJK = false; }
 
 	// Don't allow non-breaking spaces that are converted to substituted chars or will break anyway and mess up table width calc.
-	$html = str_replace('<tta>160</tta>',$this->chrs[32],$html); 
+	$html = str_replace('<tta>160</tta>',"\x20",$html); 
 	$html = str_replace('</tta><tta>','|',$html); 
 	$html = str_replace('</tts><tts>','|',$html); 
 	$html = str_replace('</ttz><ttz>','|',$html); 
@@ -13570,6 +13575,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 	if ($this->progressBar) { $this->UpdateProgressBar(1,0); }	// *PROGRESS-BAR*
 	$this->subPos = -1;	// mPDF 5.1.005 
 	$cnt = count($a);
+	global $chrs;
 	for($i=0;$i<$cnt; $i++) {
 		$e = $a[$i];
 		if($i%2==0) {
@@ -13612,7 +13618,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 				$es = explode('|',$e);
 				$e = '';
 				foreach($es AS $val) {
-					$e .= $this->chrs[$val];
+					$e .= $chrs[$val];
 				}
 			}
 			//Adjust lineheight
@@ -19572,7 +19578,7 @@ function OpenTag($tag,$attr)
 
 		// change to &nbsp; spaces
 		if ($this->usingCoreFont) { 
-			$ls = str_repeat(chr(160).chr(160),($this->listlvl-1)*2) . $blt . ' '; 
+			$ls = str_repeat("\xa0\xa0",($this->listlvl-1)*2) . $blt . ' '; 
 		}
 		else {
 			$ls = str_repeat("\xc2\xa0\xc2\xa0",($this->listlvl-1)*2) . $blt . ' '; 
@@ -20876,7 +20882,7 @@ function printlistbuffer() {
   			$blt_width = $this->GetStringWidth($list_item_marker);
 			break;
 		  }
-              $list_item_marker = $this->chrs[108]; // bullet disc in Zapfdingbats  'l'
+              $list_item_marker = "\x6c"; // bullet disc in Zapfdingbats  'l'
 		  $typefont = 'czapfdingbats';
 		  $blt_width = (0.791 * $this->FontSize/2.5); 
               break;
@@ -20887,7 +20893,7 @@ function printlistbuffer() {
   			$blt_width = $this->GetStringWidth($list_item_marker);
 			break;
 		  }
-              $list_item_marker = $this->chrs[109]; // circle in Zapfdingbats   'm'
+              $list_item_marker = "\x6d"; // circle in Zapfdingbats   'm'
 		  $typefont = 'czapfdingbats';
 		  $blt_width = (0.873 * $this->FontSize/2.5); 
               break;
@@ -20898,7 +20904,7 @@ function printlistbuffer() {
   			$blt_width = $this->GetStringWidth($list_item_marker);
 			break;
 		  }
-              $list_item_marker = $this->chrs[110]; //black square in Zapfdingbats font   'n'
+              $list_item_marker = "\x6e"; //black square in Zapfdingbats font   'n'
 		  $typefont = 'czapfdingbats';
 		  $blt_width = (0.761 * $this->FontSize/2.5); 
               break;
@@ -23582,8 +23588,8 @@ function TableWordWrap($maxwidth, $forcewrap = 0, $textbuffer = '', $def_fontsiz
 			}
 			else {
 /*-- HYPHENATION --*/
-				// Soft Hyphens chr(173)
-				if ((!$this->usingCoreFont && preg_match("/\xc2\xad/",$word)) || ($this->usingCoreFont && preg_match("/".chr(173)."/",$word) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) ) {
+				// Soft Hyphens "\xad"
+				if ((!$this->usingCoreFont && preg_match("/\xc2\xad/",$word)) || ($this->usingCoreFont && preg_match("/"."\xad"."/",$word) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) ) {
 					list($success,$pre,$post,$prelength) = $this->softHyphenate($word, ($maxwidth - $width));
 					if ($success) { 
 						$text .= $pre.'-';
@@ -27609,6 +27615,8 @@ function _RC4($key, $text) {
 	$a = 0;
 	$b = 0;
 	$out = '';
+	global $chrs;
+	global $ords;
 	for ($i=0; $i<$len; $i++){
 		$a = ($a+1)%256;
 		$t= $rc4[$a];
@@ -27616,7 +27624,7 @@ function _RC4($key, $text) {
 		$rc4[$a] = $rc4[$b];
 		$rc4[$b] = $t;
 		$k = $rc4[($rc4[$a]+$rc4[$b])%256];
-		$out.= $this->chrs[ord($text[$i]) ^ $k];
+		$out.= $chrs[$ords[$text[$i]] ^ $k];
 	}
 	return $out;
 }
@@ -28956,7 +28964,7 @@ function CreateIndex($NbCol=1, $reffontsize='', $linespacing='', $offset=3, $use
 			 $range_end = 0;
 
 			 if (!$this->usingCoreFont) { $spacer = "\xc2\xa0 "; }
-			 else { $spacer = chr(160).' '; }
+			 else { $spacer = "\xa0".' '; }
 			 $this->textbuffer[] = array($spacer, '',$this->currentfontstyle,$this->colorarray,$this->currentfontfamily,$this->SUP,$this->SUB,'',$this->strike,$this->outlineparam,$this->spanbgcolorarray,$this->currentfontsize,$this->ReqFontStyle,$this->kerning,$this->lSpacingCSS,$this->wSpacingCSS); 
 			 if ($this->directionality == 'rtl') { $sep = '.'; $joiner = '-'; }
 			 else { $sep = ', '; $joiner = '-'; }

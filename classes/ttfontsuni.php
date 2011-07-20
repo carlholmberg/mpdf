@@ -176,10 +176,7 @@ var $kerninfo;	// mPDF 5.1
 		if (strlen($data) % 4) { $data .= str_repeat("\0",(4-(strlen($data) % 4))); }
 		$hi=0x0000;
 		$lo=0x0000;
-		$ords = array();
-		for ($i=0; $i<256; $i++) {
-			$ord[chr($i)] = $i;
-		}
+		global $ords;
 		for($i=0;$i<strlen($data);$i+=4) {
 			$hi += ($ords[$data[$i]]<<8) + $ords[$data[$i+1]];
 			$lo += ($ords[$data[$i+2]]<<8) + $ords[$data[$i+3]];
@@ -2152,6 +2149,7 @@ var $kerninfo;	// mPDF 5.1
 	function getHMTX($numberOfHMetrics, $numGlyphs, &$glyphToChar, $scale) {
 		$start = $this->seek_table("hmtx");
 		$aw = 0;
+		global $chrs;
 		$this->charWidths = str_pad('', 256*256*2, "\x00");
 		if ($this->maxUniChar > 65536) { $this->charWidths .= str_pad('', 256*256*2, "\x00"); }	// Plane 1 SMP
 		if ($this->maxUniChar > 131072) { $this->charWidths .= str_pad('', 256*256*2, "\x00"); }	// Plane 2 SMP
@@ -2184,8 +2182,8 @@ var $kerninfo;	// mPDF 5.1
  						$w = intval(round($scale*$aw));
 						if ($w == 0) { $w = 65535; }
 						if ($char < 196608) { // mPDF 5.0
-							$this->charWidths[$char*2] = chr($w >> 8);
-							$this->charWidths[$char*2 + 1] = chr($w & 0xFF);
+							$this->charWidths[$char*2] = $chrs[$w >> 8];
+							$this->charWidths[$char*2 + 1] = $chrs[$w & 0xFF];
 							$nCharWidths++;
 						}
 					}
@@ -2203,8 +2201,8 @@ var $kerninfo;	// mPDF 5.1
 						$w = intval(round($scale*$aw));
 						if ($w == 0) { $w = 65535; }
 						if ($char < 196608) { // mPDF 5.0
-							$this->charWidths[$char*2] = chr($w >> 8);
-							$this->charWidths[$char*2 + 1] = chr($w & 0xFF);
+							$this->charWidths[$char*2] = $chrs[$w >> 8];
+							$this->charWidths[$char*2 + 1] = $chrs[$w & 0xFF];
 							$nCharWidths++;
 						}
 					}
@@ -2213,8 +2211,8 @@ var $kerninfo;	// mPDF 5.1
 		}
 		// NB 65535 is a set width of 0
 		// First bytes define number of chars in font
-		$this->charWidths[0] = chr($nCharWidths >> 8);
-		$this->charWidths[1] = chr($nCharWidths & 0xFF);
+		$this->charWidths[0] = $chrs[$nCharWidths >> 8];
+		$this->charWidths[1] = $chrs[$nCharWidths & 0xFF];
 	}
 
 	function getHMetric($numberOfHMetrics, $gid) {
