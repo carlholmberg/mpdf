@@ -57,6 +57,8 @@ if (!defined('PHP_VERSION_ID')) {
     define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
 }
 
+require_once('classes/helpers.php');
+
 class mPDF
 {
 
@@ -10285,7 +10287,7 @@ function _convImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask) {
 				$trns=array($this->ords[substr($t,1,1)],$this->ords[substr($t,3,1)],$this->ords[substr($t,5,1)]); 
 				$trnsrgb = $trns;
 				if ($targetcs=='DeviceCMYK') {
-					$col = $this->rgb2cmyk(array(3,$trns[0],$trns[1],$trns[2]));
+					$col = Color::rgb2cmyk(array(3,$trns[0],$trns[1],$trns[2]));
 					$c1 = intval($col[1]*2.55);
 					$c2 = intval($col[2]*2.55);
 					$c3 = intval($col[3]*2.55);
@@ -10307,7 +10309,7 @@ function _convImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask) {
 					$trns=array($r,$g,$b);	// ****
 					$trnsrgb = $trns;
 					if ($targetcs=='DeviceCMYK') {
-						$col = $this->rgb2cmyk(array(3,$r,$g,$b));
+						$col = Color::rgb2cmyk(array(3,$r,$g,$b));
 						$c1 = intval($col[1]*2.55);
 						$c2 = intval($col[2]*2.55);
 						$c3 = intval($col[3]*2.55);
@@ -10336,7 +10338,7 @@ function _convImage(&$data, $colspace, $targetcs, $w, $h, $dpi, $mask) {
 				}
 
 				if ($targetcs=='DeviceCMYK') {
-					$col = $this->rgb2cmyk(array(3,$r,$g,$b));
+					$col = Color::rgb2cmyk(array(3,$r,$g,$b));
 					$c1 = intval($col[1]*2.55);
 					$c2 = intval($col[2]*2.55);
 					$c3 = intval($col[3]*2.55);
@@ -15621,7 +15623,7 @@ function MergeCSS($inherit,$tag,$attr) {
 		  if ($this->ColActive || $this->keep_block_together) { 
 		  	if (isset($this->blk[$this->blklvl-1]['bgcolor']) && $this->blk[$this->blklvl-1]['bgcolor']) { // Doesn't officially inherit, but default value is transparent (?=inherited)
 				$cor = $this->blk[$this->blklvl-1]['bgcolorarray' ];
-				$p['BACKGROUND-COLOR'] = $this->_colAtoString($cor);
+				$p['BACKGROUND-COLOR'] = Color::array2string($cor);
 			}
 		  }
 
@@ -15636,7 +15638,7 @@ function MergeCSS($inherit,$tag,$attr) {
 		if (isset($biilp[ 'B' ]) && $biilp[ 'B' ]) { $p['FONT-WEIGHT'] = 'bold'; }
 		if (isset($biilp[ 'colorarray' ]) && $biilp[ 'colorarray' ]) { 
 			$cor = $biilp[ 'colorarray' ];
-			$p['COLOR'] = $this->_colAtoString($cor);
+			$p['COLOR'] = Color::array2string($cor);
 		}
 		if (isset($biilp[ 'fontkerning' ])) {
 			if ($biilp[ 'fontkerning' ]) { $p['FONT-KERNING'] = 'normal'; }
@@ -15665,7 +15667,7 @@ function MergeCSS($inherit,$tag,$attr) {
    		    if (isset($bilp[ 'B' ]) && $bilp[ 'B' ]) { $p['FONT-WEIGHT'] = 'bold'; }
    		    if (isset($bilp[ 'colorarray' ]) && $bilp[ 'colorarray' ]) { 
 			$cor = $bilp[ 'colorarray' ];
-			$p['COLOR'] = $this->_colAtoString($cor);
+			$p['COLOR'] = Color::array2string($cor);
 		    }
 		    if (isset($bilp[ 'toupper' ]) && $bilp[ 'toupper' ]) { $p['TEXT-TRANSFORM'] = 'uppercase'; }
 		    else if (isset($bilp[ 'tolower' ]) && $bilp[ 'tolower' ]) { $p['TEXT-TRANSFORM'] = 'lowercase'; }
@@ -15687,7 +15689,7 @@ function MergeCSS($inherit,$tag,$attr) {
    			if (isset($lilp[ 'B' ]) && $lilp[ 'B' ]) { $p['FONT-WEIGHT'] = 'bold'; }
    			if (isset($lilp[ 'colorarray' ]) && $lilp[ 'colorarray' ]) { 
 				$cor = $lilp[ 'colorarray' ];
-				$p['COLOR'] = $this->_colAtoString($cor);
+				$p['COLOR'] = Color::array2string($cor);
 			}
 			if (isset($lilp[ 'toupper' ]) && $lilp[ 'toupper' ]) { $p['TEXT-TRANSFORM'] = 'uppercase'; }
 			else if (isset($lilp[ 'tolower' ]) && $lilp[ 'tolower' ]) { $p['TEXT-TRANSFORM'] = 'lowercase'; }
@@ -23159,7 +23161,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 			if (strtoupper($v) == 'INVERT') {
 			   if ($this->colorarray) {
 				$cor = $this->colorarray;
-				$this->outlineparam['COLOR'] = $this->_invertColor($cor);
+				$this->outlineparam['COLOR'] = Color::invert($cor);
 			   }
 			   else {
 				$this->outlineparam['COLOR'] = $this->ConvertColor(255);
@@ -25138,11 +25140,11 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 			}
 			else { $this->SetDColor($this->ConvertColor(0)); }
 			if ($details[$side]['style'] == 'outset' || $details[$side]['style'] == 'groove') {
-				$nc = $this->_darkenColor($details[$side]['c']);
+				$nc = Color::darken($details[$side]['c']);
 				$this->SetDColor($nc); 
 			}
 			else if ($details[$side]['style'] == 'ridge' || $details[$side]['style'] == 'inset') {
-				$nc = $this->_lightenColor($details[$side]['c']);
+				$nc = Color::lighten($details[$side]['c']);
 				$this->SetDColor($nc);
 			}
 			$this->Line($lx1 + $xadj, $ly1 + $yadj, $lx2 - $xadj2, $ly2 - $yadj2);
@@ -25157,7 +25159,7 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 			$xadj3 = $yadj3 = $wadj3 = $hadj3 = 0;
 
 			if ($details[$side]['style'] == 'ridge' || $details[$side]['style'] == 'inset') {
-			   $nc = $this->_darkenColor($details[$side]['c']);
+			   $nc = Color::darken($details[$side]['c']);
 
 			   if ($bSeparate && $cort=='table') {
 				if ($side=='T') {
@@ -25204,7 +25206,7 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 			   else if ($side=='R') { $xadj3 = $this->LineWidth/2; $yadj3 = $this->LineWidth/2; }
 			}
 			else {
-			   $nc = $this->_lightenColor($details[$side]['c']);
+			   $nc = Color::lighten($details[$side]['c']);
 
 			   if ($bSeparate && $cort=='table') {
 				if ($side=='T') {
@@ -25313,46 +25315,6 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 
 
 /*-- TABLES --*/
-/*-- TABLES-ADVANCED-BORDERS --*/
-function _lightenColor($c) {
-	if (isset($c['R'])) { die('Color error in _lightencolor'); }
-	if ($c[0]==3 || $c[0]==5) { 	// RGB // mPDF 5.0.051  
-		list($h,$s,$l) = $this->rgb2hsl($c[1]/255,$c[2]/255,$c[3]/255);
-		$l += ((1 - $l)*0.8);
-		list($r,$g,$b) = $this->hsl2rgb($h,$s,$l);
-		return array(3,$r,$g,$b);
-	}
-	else if ($c[0]==4 || $c[0]==6) { 	// CMYK
-		return array(4, max(0,($c[1]-20)), max(0,($c[2]-20)), max(0,($c[3]-20)), max(0,($c[4]-20)) );
-	}
-	else if ($c[0]==1) {	// Grayscale
-		return array(1,min(255,($c[1]+32)));
-	}
-	return $c;
-}
-
-
-function _darkenColor($c) {
-	if (isset($c['R'])) { die('Color error in _lightencolor'); }
-	if ($c[0]==3 || $c[0]==5) { 	// RGB // mPDF 5.0.051  
-		list($h,$s,$l) = $this->rgb2hsl($c[1]/255,$c[2]/255,$c[3]/255);
-		$s *= 0.25;
-		$l *= 0.75;
-		list($r,$g,$b) = $this->hsl2rgb($h,$s,$l);
-		return array(3,$r,$g,$b);
- 	}
-	else if ($c[0]==4 || $c[0]==6) { 	// CMYK
-		return array(4, min(100,($c[1]+20)), min(100,($c[2]+20)), min(100,($c[3]+20)), min(100,($c[4]+20)) );
- 	}
-	else if ($c[0]==1) {	// Grayscale
-		return array(1,max(0,($c[1]-32)));
- 	}
-	return $c;
-}
-
-/*-- END TABLES-ADVANCED-BORDERS --*/
-
-
 
 function setBorder(&$var, $flag, $set = true) {
 	$flag = intval($flag);
@@ -31777,7 +31739,7 @@ function ConvertColor($color="#000000"){
 		else if ($type=='cmyk') { $c = array(4,$cores[0],$cores[1],$cores[2],$cores[3]); }
 		else if ($type=='cmyka') { $c = array(6,$cores[0],$cores[1],$cores[2],$cores[3],$cores[4]); }
 		else if ($type=='hsl' || $type=='hsla') { 
-			$conv = $this->hsl2rgb($cores[0]/360,$cores[1],$cores[2]);
+			$conv = Color::hsl2rgb($cores[0]/360,$cores[1],$cores[2]);
 			if ($type=='hsl') { $c = array(3,$conv[0],$conv[1],$conv[2]); }
 			else if ($type=='hsla') { $c = array(5,$conv[0],$conv[1],$conv[2],$cores[3]); }
 		}
@@ -31802,185 +31764,65 @@ function ConvertColor($color="#000000"){
 				if ($this->PDFA && !$this->PDFAauto) { $this->PDFAXwarnings[] = "Spot color specified '".$this->spotColorIDs[$c[1]]."' (converted to process color)"; }
 				if ($this->restrictColorSpace!=3) { 
 					$sp = $this->spotColors[$this->spotColorIDs[$c[1]]]; 
-					$c = $this->cmyk2rgb(array(4,$sp['c'],$sp['m'],$sp['y'],$sp['k'])); 
+					$c = Color::cmyk2rgb(array(4,$sp['c'],$sp['m'],$sp['y'],$sp['k'])); 
 				}
 			}
 			else if ($this->restrictColorSpace==1) { 
 				$sp = $this->spotColors[$this->spotColorIDs[$c[1]]]; 
-				$c = $this->cmyk2gray(array(4,$sp['c'],$sp['m'],$sp['y'],$sp['k'])); 
+				$c = Color::cmyk2gray(array(4,$sp['c'],$sp['m'],$sp['y'],$sp['k'])); 
 			}
 			//else if ($this->restrictColorSpace==2) { 	//******* ??? allow (CMYK) Spot in RGB space
 			//	$sp = $this->spotColors[$this->spotColorIDs[$c[1]]]; 
-			//	$c = $this->cmyk2rgb(array(4,$sp['c'],$sp['m'],$sp['y'],$sp['k'])); 
+			//	$c = Color::cmyk2rgb(array(4,$sp['c'],$sp['m'],$sp['y'],$sp['k'])); 
 			//}
 
 		}
 		else if ($c[0]==3) {	// RGB
 			if ($this->PDFX || ($this->PDFA && $this->restrictColorSpace==3)) { 
 				if (($this->PDFA && !$this->PDFAauto) || ($this->PDFX && !$this->PDFXauto)) { $this->PDFAXwarnings[] = "RGB color specified '".$color."' (converted to CMYK)"; }
-				$c = $this->rgb2cmyk($c); 
+				$c = Color::rgb2cmyk($c); 
 			}
-			else if ($this->restrictColorSpace==1) { $c = $this->rgb2gray($c); }
-			else if ($this->restrictColorSpace==3) { $c = $this->rgb2cmyk($c); }
+			else if ($this->restrictColorSpace==1) { $c = Color::rgb2gray($c); }
+			else if ($this->restrictColorSpace==3) { $c = Color::rgb2cmyk($c); }
 		}
 		else if ($c[0]==4) {	// CMYK
 			if ($this->PDFA && $this->restrictColorSpace!=3) { 
 				if ($this->PDFA && !$this->PDFAauto) { $this->PDFAXwarnings[] = "CMYK color specified '".$color."' (converted to RGB)"; }
-				$c = $this->cmyk2rgb($c); 
+				$c = Color::cmyk2rgb($c); 
 			}
-			else if ($this->restrictColorSpace==1) { $c = $this->cmyk2gray($c); }
-			else if ($this->restrictColorSpace==2) { $c = $this->cmyk2rgb($c); }
+			else if ($this->restrictColorSpace==1) { $c = Color::cmyk2gray($c); }
+			else if ($this->restrictColorSpace==2) { $c = Color::cmyk2rgb($c); }
 		}
 		else if ($c[0]==5) {	// RGBa
 			if ($this->PDFX || ($this->PDFA && $this->restrictColorSpace==3)) { 
 				if (($this->PDFA && !$this->PDFAauto) || ($this->PDFX && !$this->PDFXauto)) { $this->PDFAXwarnings[] = "RGB color with transparency specified '".$color."' (converted to CMYK without transparency)"; }
-				$c = $this->rgb2cmyk($c); 
+				$c = Color::rgb2cmyk($c); 
 				$c = array(4, $c[1], $c[2], $c[3], $c[4]);
 			}
 			else if ($this->PDFA && $this->restrictColorSpace!=3) { 
 				if (!$this->PDFAauto) { $this->PDFAXwarnings[] = "RGB color with transparency specified '".$color."' (converted to RGB without transparency)"; }
-				$c = $this->rgb2cmyk($c); 
+				$c = Color::rgb2cmyk($c); 
 				$c = array(4, $c[1], $c[2], $c[3], $c[4]);
 			}
-			else if ($this->restrictColorSpace==1) { $c = $this->rgb2gray($c); }
-			else if ($this->restrictColorSpace==3) { $c = $this->rgb2cmyk($c); }
+			else if ($this->restrictColorSpace==1) { $c = Color::rgb2gray($c); }
+			else if ($this->restrictColorSpace==3) { $c = Color::rgb2cmyk($c); }
 		}
 		else if ($c[0]==6) {	// CMYKa
 			if ($this->PDFA && $this->restrictColorSpace!=3) { 
 				if (($this->PDFA && !$this->PDFAauto) || ($this->PDFX && !$this->PDFXauto)) { $this->PDFAXwarnings[] = "CMYK color with transparency specified '".$color."' (converted to RGB without transparency)"; }
-				$c = $this->cmyk2rgb($c); 
+				$c = Color::cmyk2rgb($c); 
 				$c = array(3, $c[1], $c[2], $c[3]);
 			}
 			else if ($this->PDFX || ($this->PDFA && $this->restrictColorSpace==3)) { 
 				if (($this->PDFA && !$this->PDFAauto) || ($this->PDFX && !$this->PDFXauto)) { $this->PDFAXwarnings[] = "CMYK color with transparency specified '".$color."' (converted to CMYK without transparency)"; }
-				$c = $this->cmyk2rgb($c); 
+				$c = Color::cmyk2rgb($c); 
 				$c = array(3, $c[1], $c[2], $c[3]);
 			}
-			else if ($this->restrictColorSpace==1) { $c = $this->cmyk2gray($c); }
-			else if ($this->restrictColorSpace==2) { $c = $this->cmyk2rgb($c); }
+			else if ($this->restrictColorSpace==1) { $c = Color::cmyk2gray($c); }
+			else if ($this->restrictColorSpace==2) { $c = Color::cmyk2rgb($c); }
 		}
 	}
 	return $c;
-}
-
-function rgb2gray($c) {
-	if (isset($c[4])) { return array(1,(($c[1] * .21) + ($c[2] * .71) + ($c[3] * .07)), $c[4]); }
-	else { return array(1,(($c[1] * .21) + ($c[2] * .71) + ($c[3] * .07))); }
-}
-
-function cmyk2gray($c) {
-	$rgb = $this->cmyk2rgb($c);
-	return $this->rgb2gray($rgb);
-}
-
-function rgb2cmyk($c) {
-	$cyan = 1 - ($c[1] / 255);
-	$magenta = 1 - ($c[2] / 255);
-	$yellow = 1 - ($c[3] / 255);
-	$min = min($cyan, $magenta, $yellow);
-
-	if ($min == 1) {
-		if ($c[0]==5) { return array (6,100,100,100,100, $c[4]); }
-		else { return array (4,100,100,100,100); }
-		// For K-Black
-		//if ($c[0]==5) { return array (6,0,0,0,100, $c[4]); }
-		//else { return array (4,0,0,0,100); }
-	}
-	$K = $min;
-	$black = 1 - $K;
-	if ($c[0]==5) { return array (6,($cyan-$K)*100/$black, ($magenta-$K)*100/$black, ($yellow-$K)*100/$black, $K*100, $c[4]); }
-	else { return array (4,($cyan-$K)*100/$black, ($magenta-$K)*100/$black, ($yellow-$K)*100/$black, $K*100); }
-}
-
-
-function cmyk2rgb($c) {
-	$rgb = array();
-	$colors = 255 - ($c[4]*2.55);
-	$rgb[0] = intval($colors * (255 - ($c[1]*2.55))/255);
-	$rgb[1] = intval($colors * (255 - ($c[2]*2.55))/255);
-	$rgb[2] = intval($colors * (255 - ($c[3]*2.55))/255);
-	if ($c[0]==6) { return array (5,$rgb[0],$rgb[1],$rgb[2], $c[5]); }
-	else { return array (3,$rgb[0],$rgb[1],$rgb[2]); }
-}
-
-function rgb2hsl($var_r, $var_g, $var_b) {
-    $var_min = min($var_r,$var_g,$var_b);
-    $var_max = max($var_r,$var_g,$var_b);
-    $del_max = $var_max - $var_min;
-    $l = ($var_max + $var_min) / 2;
-    if ($del_max == 0) {
-            $h = 0;
-            $s = 0;
-    }
-    else {
-            if ($l < 0.5) { $s = $del_max / ($var_max + $var_min); }
-            else { $s = $del_max / (2 - $var_max - $var_min); }
-            $del_r = ((($var_max - $var_r) / 6) + ($del_max / 2)) / $del_max;
-            $del_g = ((($var_max - $var_g) / 6) + ($del_max / 2)) / $del_max;
-            $del_b = ((($var_max - $var_b) / 6) + ($del_max / 2)) / $del_max;
-            if ($var_r == $var_max) { $h = $del_b - $del_g; }
-            elseif ($var_g == $var_max)  { $h = (1 / 3) + $del_r - $del_b; }
-            elseif ($var_b == $var_max)  { $h = (2 / 3) + $del_g - $del_r; };
-            if ($h < 0) { $h += 1; }
-            if ($h > 1) { $h -= 1; }
-    }
-    return array($h,$s,$l);
-}
-
-
-function hsl2rgb($h2,$s2,$l2) {
-	// Input is HSL value of complementary colour, held in $h2, $s, $l as fractions of 1
-	// Output is RGB in normal 255 255 255 format, held in $r, $g, $b
-	// Hue is converted using function hue_2_rgb, shown at the end of this code
-	if ($s2 == 0) {
-		$r = $l2 * 255;
-		$g = $l2 * 255;
-		$b = $l2 * 255;
-	}
-	else {
-		if ($l2 < 0.5) { $var_2 = $l2 * (1 + $s2); }
-		else { $var_2 = ($l2 + $s2) - ($s2 * $l2); }
-		$var_1 = 2 * $l2 - $var_2;
-		$r = round(255 * $this->hue_2_rgb($var_1,$var_2,$h2 + (1 / 3)));
-		$g = round(255 * $this->hue_2_rgb($var_1,$var_2,$h2));
-		$b = round(255 * $this->hue_2_rgb($var_1,$var_2,$h2 - (1 / 3)));
-	}
-	return array($r,$g,$b);
-}
-
-function hue_2_rgb($v1,$v2,$vh) {
-	// Function to convert hue to RGB, called from above
-	if ($vh < 0) { $vh += 1; };
-	if ($vh > 1) { $vh -= 1; };
-	if ((6 * $vh) < 1) { return ($v1 + ($v2 - $v1) * 6 * $vh); };
-	if ((2 * $vh) < 1) { return ($v2); };
-	if ((3 * $vh) < 2) { return ($v1 + ($v2 - $v1) * ((2 / 3 - $vh) * 6)); };
-	return ($v1);
-}
-
-function _invertColor($cor) {
-	if ($cor[0]==3 || $cor[0]==5) {	// RGB
-		return array(3, (255-$cor[1]), (255-$cor[2]), (255-$cor[3]));
-	}
-	else if ($cor[0]==4 || $cor[0]==6) {	// CMYK
-		return array(4, (100-$cor[1]), (100-$cor[2]), (100-$cor[3]), (100-$cor[4]));
-	}
-	else if ($cor[0]==1) {	// Grayscale
-		return array(1, (255-$cor[1]));
-	}	
-	// Cannot cope with non-RGB colors at present
-	die('Error in _invertColor - trying to invert non-RGB color');
-}
-
-function _colAtoString($cor) {
-	$s = '';
-	if ($cor[0]==1) $s = 'rgb('.$cor[1].','.$cor[1].','.$cor[1].')';
-	else if ($cor[0]==2) $s = 'spot('.$cor[1].','.$cor[2].')';		// SPOT COLOR
-	else if ($cor[0]==3) $s = 'rgb('.$cor[1].','.$cor[2].','.$cor[3].')';
-	else if ($cor[0]==4) $s = 'cmyk('.$cor[1].','.$cor[2].','.$cor[3].','.$cor[4].')';
-	else if ($cor[0]==5) $s = 'rgba('.$cor[1].','.$cor[2].','.$cor[3].','.$cor[4].')';
-	else if ($cor[0]==6) $s = 'cmyka('.$cor[1].','.$cor[2].','.$cor[3].','.$cor[4].','.$cor[5].')';
-	return $s;
 }
 
 function ConvertSize($size=5,$maxsize=0,$fontsize=false,$usefontsize=true){

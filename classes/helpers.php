@@ -16,6 +16,42 @@
 
 class Color
 {
+	function lighten($c)
+	{
+		if (isset($c['R'])) {
+			die('Color error in Color::lighten()');
+		}
+		if ($c[0]==3 || $c[0]==5) {  // RGB
+			list($h, $s, $l) = Color::rgb2hsl($c[1]/255, $c[2]/255, $c[3]/255);
+			$l += ((1 - $l)*0.8);
+			list($r, $g, $b) = Color::hsl2rgb($h, $s, $l);
+			return array(3, $r, $g, $b);
+		} else if ($c[0]==4 || $c[0]==6) { 	// CMYK
+			return array(4, max(0, $c[1]-20), max(0, $c[2]-20), max(0, $c[3]-20), max(0, $c[4]-20));
+		} else if ($c[0]==1) {	// Grayscale
+			return array(1, min(255, $c[1]+32));
+		}
+		return $c;
+	}
+	
+	
+	function darken($c)
+	{
+		if (isset($c['R'])) {
+			die('Color error in Color::darken()');
+		}
+		if ($c[0]==3 || $c[0]==5) {  // RGB  
+			list($h, $s, $l) = Color::rgb2hsl($c[1]/255, $c[2]/255, $c[3]/255);
+			list($r, $g, $b) = Color::hsl2rgb($h, $s*0.25, $l*0,75);
+			return array(3, $r, $g, $b);
+		} else if ($c[0]==4 || $c[0]==6) {  // CMYK
+			return array(4, min(100, $c[1]+20), min(100, $c[2]+20), min(100, $c[3]+20), min(100, $c[4]+20));
+		} else if ($c[0]==1) {  // Grayscale
+			return array(1, max(0, $c[1]-32));
+		}
+		return $c;
+	}
+	
 	static function rgb2gray($c)
 	{
 		if (isset($c[4])) {
@@ -113,7 +149,7 @@ class Color
 		return array($r,$g,$b);
 	}
 	
-	static function hue_2_rgb($v1,$v2,$vh)
+	static function hue2rgb($v1,$v2,$vh)
 	{
 		// Function to convert hue to RGB, called from above
 		if ($vh < 0) { $vh += 1; };
@@ -124,7 +160,7 @@ class Color
 		return ($v1);
 	}
 	
-	static function _invertColor($cor)
+	static function invert($cor)
 	{
 		if ($cor[0]==3 || $cor[0]==5) {	// RGB
 			return array(3, (255-$cor[1]), (255-$cor[2]), (255-$cor[3]));
@@ -139,7 +175,7 @@ class Color
 		die('Error in _invertColor - trying to invert non-RGB color');
 	}
 	
-	static function _colAtoString($cor)
+	static function array2string($cor)
 	{
 		$s = '';
 		if ($cor[0]==1) $s = 'rgb('.$cor[1].','.$cor[1].','.$cor[1].')';
