@@ -176,9 +176,13 @@ var $kerninfo;	// mPDF 5.1
 		if (strlen($data) % 4) { $data .= str_repeat("\0",(4-(strlen($data) % 4))); }
 		$hi=0x0000;
 		$lo=0x0000;
+		$ords = array();
+		for ($i=0; $i<256; $i++) {
+			$ord[chr($i)] = $i;
+		}
 		for($i=0;$i<strlen($data);$i+=4) {
-			$hi += (ord($data[$i])<<8) + ord($data[$i+1]);
-			$lo += (ord($data[$i+2])<<8) + ord($data[$i+3]);
+			$hi += ($ords[$data[$i]]<<8) + $ords[$data[$i+1]];
+			$lo += ($ords[$data[$i+2]]<<8) + $ords[$data[$i+3]];
 			$hi += $lo >> 16;
 			$lo = $lo & 0xFFFF;
 			$hi = $hi & 0xFFFF;
