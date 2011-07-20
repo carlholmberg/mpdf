@@ -1875,10 +1875,10 @@ function Arcto($x1, $y1, $x2, $y2, $rx, $ry, $angle, $largeArcFlag, $sweepFlag) 
 
 
 			if ($current_style['text-anchor']=='middle') {
-				$tw = $this->mpdf_ref->GetStringWidth($txt)*$this->mpdf_ref->k/2;	// mPDF 4.4.003
+				$tw = $this->mpdf_ref->GetStringWidth($txt)*MPDF_K/2;	// mPDF 4.4.003
 			}
 			else if ($current_style['text-anchor']=='end') {
-				$tw = $this->mpdf_ref->GetStringWidth($txt)*$this->mpdf_ref->k;	// mPDF 4.4.003
+				$tw = $this->mpdf_ref->GetStringWidth($txt)*MPDF_K;	// mPDF 4.4.003
 			}
 			else $tw = 0;
 
