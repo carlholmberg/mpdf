@@ -9134,7 +9134,7 @@ function _beginpage($orientation,$mgl='',$mgr='',$mgt='',$mgb='',$mgh='',$mgf=''
 	if(!$orientation)
 		$orientation=$this->DefOrientation;
 	else {
-		$orientation=strtoupper(substr($orientation,0,1));
+		$orientation=strtoupper($orientation[0]);
 		if($orientation!=$this->DefOrientation)
 			$this->OrientationChanges[$this->page]=true;
 	}
@@ -9510,7 +9510,7 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 		$j = strpos($data,'JFIF');
 		if ($j) { 
 			//Read resolution
-			$unitSp=ord(substr($data,($j+7),1));
+			$unitSp=ord($data[$j+7]);
 			if ($unitSp > 0) {
 				$ppUx=$this->_twobytes2int(substr($data,($j+8),2));	// horizontal pixels per meter, usually set to zero
 				if ($unitSp == 2) {	// = dots per cm (if == 1 set as dpi)
@@ -10489,7 +10489,7 @@ function _fourbytes2int_le($s) {
 
 function _twobytes2int_le($s) {
 	//Read a 2-byte integer from string
-	return (ord(substr($s, 1, 1))<<8) + ord(substr($s, 0, 1));
+	return (ord($s[1])<<8) + ord($s[0]);
 }
 
 
@@ -10500,7 +10500,7 @@ function _fourbytes2int($s) {
 
 function _twobytes2int($s) {
 	//Read a 2-byte integer from string
-	return (ord(substr($s, 0, 1))<<8) + ord(substr($s, 1, 1));
+	return (ord($s[0])<<8) + ord($s[1]);
 }
 
 function _jpgHeaderFromString(&$data) {
@@ -10517,11 +10517,11 @@ function _jpgHeaderFromString(&$data) {
 }
 
 function _jpgDataFromHeader($hdr) {
-	$bpc = ord(substr($hdr, 2, 1));
+	$bpc = ord($hdr[2]);
 	if (!$bpc) { $bpc = 8; }
 	$h = $this->_twobytes2int(substr($hdr, 3, 2));
 	$w = $this->_twobytes2int(substr($hdr, 5, 2));
-	$channels = ord(substr($hdr, 7, 1));
+	$channels = ord($hdr[7]);
 	if ($channels==3) { $colspace='DeviceRGB'; }
 	elseif($channels==4) { $colspace='DeviceCMYK'; }
 	else { $colspace='DeviceGray'; }
@@ -10915,8 +10915,8 @@ function _Arc($x1, $y1, $x2, $y2, $x3, $y3)
 // $col = array(R,G,B/255); or array(G/255); or array(C,M,Y,K/100)
 // $stops = array('col'=>$col [, 'opacity'=>0-1] [, 'offset'=>0-1])
 function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coords='', $extend='', $return=false, $is_mask=false) {
-	if (strtoupper(substr($type,0,1)) == 'L') { $type = 2; }	// linear
-	else if (strtoupper(substr($type,0,1)) == 'R') { $type = 3; }	// radial
+	if (strtoupper($type[0]) == 'L') { $type = 2; }	// linear
+	else if (strtoupper($type[0]) == 'R') { $type = 3; }	// radial
 	if ($colorspace != 'CMYK' && $colorspace != 'Gray') {
 		$colorspace = 'RGB';
 	}
@@ -11701,7 +11701,7 @@ function GetFullPath(&$path,$basepath='') {
 	$regexp = '|^./|';	// Inadvertently corrects "./path/etc" and "//www.domain.com/etc"
 	$path = preg_replace($regexp,'',$path);
 
-	if(substr($path,0,1) == '#') { return; }
+	if($path[0] == '#') { return; }
 	if (stristr($path,"mailto:") !== false) { return; }
 	if (strpos($path,"../") !== false ) { //It is a Relative Link
 		$backtrackamount = substr_count($path,"../");
@@ -11715,7 +11715,7 @@ function GetFullPath(&$path,$basepath='') {
 		$path = $path . "/" . $filepath; //Make it an absolute path
 	}
 	else if( strpos($path,":/") === false || strpos($path,":/") > 10) { //It is a Local Link
-		if (substr($path,0,1) == "/") { 
+		if ($path[0] == "/") { 
 			$tr = parse_url($basepath);
 			$root = $tr['scheme'].'://'.$tr['host'];
 			$path = $root . $path; 
@@ -14612,9 +14612,9 @@ function border_details($bd) {
 	}
 	else if ( count($prop) == 3 ) {
 		// Change #000000 1px solid to 1px solid #000000 (proper)
-		if (substr($prop[0],0,1) == '#') { $tmp = $prop[0]; $prop[0] = $prop[1]; $prop[1] = $prop[2]; $prop[2] = $tmp; }
+		if ($prop[0][0] == '#') { $tmp = $prop[0]; $prop[0] = $prop[1]; $prop[1] = $prop[2]; $prop[2] = $tmp; }
 		// Change solid #000000 1px to 1px solid #000000 (proper)
-		else if (substr($prop[0],1,1) == '#') { $tmp = $prop[1]; $prop[0] = $prop[2]; $prop[1] = $prop[0]; $prop[2] = $tmp; }
+		else if ($prop[0][1] == '#') { $tmp = $prop[1]; $prop[0] = $prop[2]; $prop[1] = $prop[0]; $prop[2] = $tmp; }
 		// Change solid 1px #000000 to 1px solid #000000 (proper)
 		else if (in_array($prop[0],$this->borderstyles) || $prop[0] == 'none' || $prop[0] == 'hidden' ) { 
 			$tmp = $prop[0]; $prop[0] = $prop[1]; $prop[1] = $tmp; 
@@ -14659,9 +14659,9 @@ function _fix_borderStr($bd) {
 	}
 	else if ( count($prop) == 3 ) {
 		// Change #000000 1px solid to 1px solid #000000 (proper)
-		if (substr($prop[0],0,1) == '#') { $c = $prop[0]; $w = $prop[1]; $s = $prop[2]; }
+		if ($prop[0][0] == '#') { $c = $prop[0]; $w = $prop[1]; $s = $prop[2]; }
 		// Change solid #000000 1px to 1px solid #000000 (proper)
-		else if (substr($prop[0],1,1) == '#') { $s = $prop[0]; $c = $prop[1]; $w = $prop[2]; }
+		else if ($prop[0][1] == '#') { $s = $prop[0]; $c = $prop[1]; $w = $prop[2]; }
 		// Change solid 1px #000000 to 1px solid #000000 (proper)
 		else if (in_array($prop[0],$this->borderstyles) || $prop[0] == 'none' || $prop[0] == 'hidden' ) { 
 			$s = $prop[0]; $w = $prop[1]; $c = $prop[2]; 
@@ -15231,7 +15231,7 @@ function parseBackgroundGradient($bg) {
 	$bgr = preg_split('/\s+/',$v);
 	$g = array();
 	if (count($bgr)> 6) {  
-		if (strtoupper(substr($bgr[0],0,1)) == 'L' && count($bgr)==7) {  // linear
+		if (strtoupper($bgr[0][0]) == 'L' && count($bgr)==7) {  // linear
 			$g['type'] = 2;
 			//$coords = array(0,0,1,1 );	// 0 0 1 0 or 0 1 1 1 is L 2 R; 1,1,0,1 is R2L; 1,1,1,0 is T2B; 1,0,1,1 is B2T
 			// Linear: $coords - array of the form (x1, y1, x2, y2) which defines the gradient vector (see linear_gradient_coords.jpg). 
@@ -30934,7 +30934,7 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 				$innerp = $xres * 2.5;
 				$textw = ($bcw*0.5) - $outerp - $innerp;
 				$chars = 6; // number of numerals in each half
-				$charLO = substr($code,0,1); // Left Outer
+				$charLO = $code[0]; // Left Outer
 				$charLI = substr($code,1,6); // Left Inner
 				$charRI = substr($code,7,6); // Right Inner
 				if (!$supplement) $charRO = '>'; // Right Outer
@@ -30945,10 +30945,10 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 				$innerp = $xres * 2.5;
 				$textw = ($bcw*0.5) - $outerp - $innerp;
 				$chars = 5; 
-				$charLO = substr($code,0,1); // Left Outer
+				$charLO = $code[0]; // Left Outer
 				$charLI = substr($code,1,5); // Left Inner
 				$charRI = substr($code,6,5); // Right Inner
-				$charRO = substr($code,11,1); // Right Outer
+				$charRO = $code[11]; // Right Outer
 			}
 			else if ($btype=='UPCE') {
 				$outerfontsize = 2.3;	// Inner fontsize = 3
@@ -30957,10 +30957,10 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 				$textw = ($bcw*0.5) - $outerp - $innerp;
 				$chars = 3; 
 				$upce_code = $arrcode['code'];
-				$charLO = substr($code,0,1); // Left Outer
+				$charLO = $code[0]; // Left Outer
 				$charLI = substr($upce_code,0,3); // Left Inner
 				$charRI = substr($upce_code,3,3); // Right Inner
-				$charRO = substr($code,11,1); // Right Outer
+				$charRO = $code[11]; // Right Outer
 			}
 			else if ($btype=='EAN8') {
 				$outerfontsize = 3;	// Inner fontsize = 3
