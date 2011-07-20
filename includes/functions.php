@@ -56,7 +56,7 @@ function PreparePreText($text,$ff='//FF//') {
 	// mPDF 5.0.053
 	$text = htmlspecialchars($text);
 	if ($ff) { $text = str_replace($ff,'</pre><formfeed /><pre>',$text); }
-	return ('<pre>'.$text.'</pre>');
+	return '<pre>'.$text.'</pre>';
 }
 
 if(!function_exists('strcode2utf')){ 
@@ -73,13 +73,14 @@ if(!function_exists('code2utf')){
   function code2utf($num,$lo=true){
 	//Returns the utf string corresponding to the unicode value
 	//added notes - http://uk.php.net/utf8_encode
+	global $chrs;
 	if ($num<128) {
-		if ($lo) return chr($num);
+		if ($lo) return $chrs[$num];
 		else return '&#'.$num.';';	// i.e. no change
 	}
-	if ($num<2048) return chr(($num>>6)+192).chr(($num&63)+128);
-	if ($num<65536) return chr(($num>>12)+224).chr((($num>>6)&63)+128).chr(($num&63)+128);
-	if ($num<2097152) return chr(($num>>18)+240).chr((($num>>12)&63)+128).chr((($num>>6)&63)+128) .chr(($num&63)+128);
+	if ($num<2048) return $chrs[($num>>6)+192].$chrs[($num&63)+128];
+	if ($num<65536) return $chrs[($num>>12)+224].$chrs[(($num>>6)&63)+128].$chrs[($num&63)+128];
+	if ($num<2097152) return $chrs[($num>>18)+240].$chrs[(($num>>12)&63)+128].$chrs[(($num>>6)&63)+128] .$chrs[($num&63)+128];
 	return '?';
   }
 }
@@ -87,9 +88,23 @@ if(!function_exists('code2utf')){
 
 if(!function_exists('codeHex2utf')){ 
   function codeHex2utf($hex,$lo=true){
+  	// create a static cache for function. See: http://www.php.net/manual/en/language.variables.scope.php
+  	static $codes = array();
+  	
+  	if (isset($codes[$hex])) {
+  		return $codes[$hex];
+  	}
 	$num = hexdec($hex);
-	if (($num<128) && !$lo) return '&#x'.$hex.';';	// i.e. no change
-	return code2utf($num,$lo);
+	if ($num < 128) {
+		if ($lo) {
+			return code2utf($num, $lo);
+		} else {
+			return '&#x'.$hex.';';
+		}
+	} else {
+		$codes[$hex] = code2utf($num, $lo);
+	}
+	return $codes[$hex];
   }
 }
 

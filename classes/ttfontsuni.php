@@ -177,7 +177,7 @@ var $kerninfo;	// mPDF 5.1
 		$hi=0x0000;
 		$lo=0x0000;
 		global $ords;
-		for($i=0;$i<strlen($data);$i+=4) {
+		for($i=0, $len=strlen($data); $i<$len; $i+=4) {
 			$hi += ($ords[$data[$i]]<<8) + $ords[$data[$i+1]];
 			$lo += ($ords[$data[$i+2]]<<8) + $ords[$data[$i+3]];
 			$hi += $lo >> 16;
@@ -2150,9 +2150,10 @@ var $kerninfo;	// mPDF 5.1
 		$start = $this->seek_table("hmtx");
 		$aw = 0;
 		global $chrs;
-		$this->charWidths = str_pad('', 256*256*2, "\x00");
-		if ($this->maxUniChar > 65536) { $this->charWidths .= str_pad('', 256*256*2, "\x00"); }	// Plane 1 SMP
-		if ($this->maxUniChar > 131072) { $this->charWidths .= str_pad('', 256*256*2, "\x00"); }	// Plane 2 SMP
+		$padding = str_pad('', 256*256*2, "\x00");
+		$this->charWidths = $padding;
+		if ($this->maxUniChar > 65536) { $this->charWidths .= $padding; }	// Plane 1 SMP
+		if ($this->maxUniChar > 131072) { $this->charWidths .= $padding; }	// Plane 2 SMP
 		$nCharWidths = 0;
 		if (($numberOfHMetrics*4) < $this->maxStrLenRead) {
 			$data = $this->get_chunk($start,($numberOfHMetrics*4));
