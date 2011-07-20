@@ -3200,14 +3200,14 @@ function Text($x,$y,$txt) {
 		else {
 			//Convert string to UTF-16BE without BOM
 			$txt2= $this->UTF8ToUTF16BE($txt2, false);
-			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$this->_escape($txt2));
+			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,Text::escape($txt2));
 		}
 	}
 	else {
 	      $txt2 = str_replace("\xa0","\x20",$txt);
 		if ($this->kerning && $this->useKerning) { $s .= $this->_kern($txt2, '', $aix, $x, $y); }
 		else {
-			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$this->_escape($txt2));
+			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,Text::escape($txt2));
 		}
 	}
 	if($this->U and $txt!='') {
@@ -3488,7 +3488,7 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
 			$space = " ";
 			//Convert string to UTF-16BE without BOM
 			$space= $this->UTF8ToUTF16BE($space , false);
-			$space=$this->_escape($space ); 
+			$space=Text::escape($space ); 
 			$s.=sprintf('BT '.$aix,($this->x+$dx)*$k,($this->h-($this->y+$baseline+$va))*$k);
 			$t = explode(' ',$txt);
 			$s.=sprintf(' %.3f Tc [',$this->charspacing);
@@ -3496,7 +3496,7 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
 				$tx = $t[$i]; 
 				//Convert string to UTF-16BE without BOM
 				$tx = $this->UTF8ToUTF16BE($tx , false);
-				$tx = $this->_escape($tx); 
+				$tx = Text::escape($tx); 
 				$s.=sprintf('(%s) ',$tx);
 				if (($i+1)<count($t)) {
 					$adj = -($this->ws)*1000/$this->FontSizePt;
@@ -3523,7 +3523,7 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
 				if (!$this->usingCoreFont) {
 					$txt2 = $this->UTF8ToUTF16BE($txt2, false);
 				}
-				$txt2=$this->_escape($txt2); 
+				$txt2=Text::escape($txt2); 
 				$s.=sprintf('BT '.$aix.' (%s) Tj ET',($this->x+$dx)*$k,($this->h-($this->y+$baseline+$va))*$k,$txt2);
 			}
 		  }
@@ -3598,7 +3598,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 		  $space = ' ';
 		  //Convert string to UTF-16BE without BOM
 		  $space= $this->UTF8ToUTF16BE($space , false);
-		  $space=$this->_escape($space ); 
+		  $space=Text::escape($space ); 
 		  $s = sprintf(' BT '.$aix,$x*MPDF_K,($this->h-$y)*MPDF_K);
 		  $t = explode(' ',$txt);
 		  for($i=0;$i<count($t);$i++) {
@@ -3613,7 +3613,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 				}
 				$tc = code2utf($unicode[$ti]);
 				$tc = $this->UTF8ToUTF16BE($tc, false);
-				$tj .= $this->_escape($tc); 
+				$tj .= Text::escape($tc); 
 			}
 			$tj .= ')';
 			$s.=sprintf(' %.3f Tc [%s] TJ',$this->charspacing,$tj);
@@ -3636,7 +3636,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 		}
 		$tx = code2utf($unicode[$i]);
 		$tx = $this->UTF8ToUTF16BE($tx, false);
-		$tj .= $this->_escape($tx); 
+		$tj .= Text::escape($tx); 
 	}
 	$tj .= ')';
 	$s.=sprintf(' BT '.$aix.' [%s] TJ ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$tj);
@@ -3650,7 +3650,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 			$kern = -$this->CurrentFont['kerninfo'][$txt[($i-1)]][$txt[$i]];
 			$tj .= sprintf(')%d(',$kern);
 		}
-		$tj .= $this->_escape($txt[$i]); 
+		$tj .= Text::escape($txt[$i]); 
 	}
 	$tj .= ')';
 	$s.=sprintf(' BT '.$aix.' [%s] TJ ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$tj);
@@ -3738,7 +3738,7 @@ function _smallCaps($txt, $mode, $aix, $dx, $k, $baseline, $va, $space) {
 			if (!$this->usingCoreFont) {
 				$txt = $this->UTF8ToUTF16BE($txt, false);
 			}
-			$txt=$this->_escape($txt); 
+			$txt=Text::escape($txt); 
 			$txt = '('.$txt.')';
 		}
 		if ($b[2]) { // space
@@ -10675,7 +10675,7 @@ function _UTF16BEtextstring($s) {
 		$s = $this->_RC4($this->_objectkey($this->_current_obj_id), $s);
 	}
 /*-- END ENCRYPTION --*/
-	return '('. $this->_escape($s).')';
+	return '('. Text::escape($s).')';
 }
 
 function _textstring($s) {
@@ -10684,14 +10684,7 @@ function _textstring($s) {
 		$s = $this->_RC4($this->_objectkey($this->_current_obj_id), $s);
 	}
 /*-- END ENCRYPTION --*/
-	return '('. $this->_escape($s).')';
-}
-
-
-function _escape($s)
-{
-	// the "\xd" substitution fixes the Bugs item #1421290.
-	return strtr($s, array(')' => '\\)', '(' => '\\(', '\\' => '\\\\', "\xd" => '\r'));
+	return '('. Text::escape($s).')';
 }
 
 function _putstream($s) {
@@ -13576,7 +13569,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 			if (strlen($e) == 0) { continue; }
 
 			$e = strcode2utf($e);
-			$e = $this->lesser_entity_decode($e);
+			$e = Text::lesser_entity_decode(($e);
 
 			if ($this->checkSIP && $this->CurrentFont['sipext'] && !$this->usingCoreFont && $this->subPos<$i && !$this->specialcontent) { 
 				$cnt += $this->SubstituteCharsSIP($a, $i, $e); 
@@ -27508,8 +27501,8 @@ function _putencryption() 	{
 		$this->_out('/V 1');
 		$this->_out('/R 2');
 	}
-	$this->_out('/O ('.$this->_escape($this->Ovalue).')');
-	$this->_out('/U ('.$this->_escape($this->Uvalue).')');
+	$this->_out('/O ('.Text::escape($this->Ovalue).')');
+	$this->_out('/U ('.Text::escape($this->Uvalue).')');
 	$this->_out('/P '.$this->Pvalue);
 }
 /*-- END ENCRYPTION --*/
@@ -30772,7 +30765,7 @@ function all_entities_to_utf8($txt) {
 	// converts all &#nnn; or &#xHHH; to UTF-8 multibyte
 	$txt = strcode2utf($txt);
 
-	$txt = $this->lesser_entity_decode($txt);
+	$txt = Text::lesser_entity_decode(($txt);
 	return ($txt);
 }
 
@@ -31280,7 +31273,7 @@ function AutoFont($html) {
 	foreach($a as $i => $e) {
 	   if($i%2==0) {
 		$e = strcode2utf($e);
-		$e = $this->lesser_entity_decode($e);
+		$e = Text::lesser_entity_decode(($e);
 
 		// Use U=FFF0 and U+FFF1 to mark start and end of span tags to prevent nesting occurring
 		// "\xef\xbf\xb0" ##lthtmltag## "\xef\xbf\xb1" ##gthtmltag##
@@ -31888,18 +31881,6 @@ function ConvertSize($size=5,$maxsize=0,$fontsize=false,$usefontsize=true){
 }
 
 
-function lesser_entity_decode($html) {
-  //supports the most used entity codes (only does ascii safe characters)
- 	$html = str_replace("&nbsp;"," ",$html);
- 	$html = str_replace("&lt;","<",$html);
- 	$html = str_replace("&gt;",">",$html);
-
- 	$html = str_replace("&apos;","'",$html);
- 	$html = str_replace("&quot;",'"',$html);
- 	$html = str_replace("&amp;","&",$html);
-	return $html;
-}
-
 function AdjustHTML($html,$directionality='ltr',$usepre=true, $tabSpaces=8) {
 	//Try to make the html text more manageable (turning it into XHTML)
 /*-- ANNOTATIONS --*/
@@ -32210,7 +32191,7 @@ function pdf_write_value(&$value) {
 		case PDF_TYPE_STRING :
 			if ($this->encrypted) {
 				$value[1] = $this->_RC4($this->_objectkey($this->_current_obj_id), $value[1]);
-				$value[1] = $this->_escape($value[1]);
+				$value[1] = Text::escape($value[1]);
 			} 
 			// A string.
 			$this->_out('('.$value[1].')');
@@ -32262,15 +32243,15 @@ function OverWrite($file_in, $search, $replacement, $dest="D", $file_out="mpdf" 
 	if (!$this->onlyCoreFonts && !$this->usingCoreFont) {	
 	  foreach($search AS $k=>$val) {
 		$search[$k] = $this->UTF8ToUTF16BE($search[$k] , false);
-		$search[$k] = $this->_escape($search[$k]); 
+		$search[$k] = Text::escape($search[$k]); 
 		$replacement[$k] = $this->UTF8ToUTF16BE($replacement[$k], false);
-		$replacement[$k] = $this->_escape($replacement[$k]); 
+		$replacement[$k] = Text::escape($replacement[$k]); 
 	  }
 	}
 	else {
 	  foreach($replacement AS $k=>$val) {
 		$replacement[$k] = mb_convert_encoding($replacement[$k],$this->mb_enc,'utf-8'); 
-		$replacement[$k] = $this->_escape($replacement[$k]); 
+		$replacement[$k] = Text::escape($replacement[$k]); 
 	  }
 	}
 
@@ -32586,7 +32567,7 @@ function SetJS($script) {
 function SetFormButtonJS( $name, $js ) {
 	$js = str_replace("\t",' ', trim($js) );
 	if ( isset($name) && isset($js) ) {
-		$this->array_form_button_js[$this->_escape($name)] = array(
+		$this->array_form_button_js[Text::escape($name)] = array(
 				'js' => $js
 				);
 	}
@@ -32595,7 +32576,7 @@ function SetFormButtonJS( $name, $js ) {
 function SetFormChoiceJS( $name, $js ) {
 	$js = str_replace("\t",' ', trim($js) );
 	if ( isset($name) && isset($js) ) {
-		$this->array_form_choice_js[$this->_escape($name)] = array(
+		$this->array_form_choice_js[Text::escape($name)] = array(
 				'js' => $js
 				);
 	}
@@ -32614,7 +32595,7 @@ function SetFormTextJS( $name, $js ) {
 			$format = 'C';
 		else 
 			$format = 'C';
-		$this->array_form_text_js[$this->_escape($name)][$format] = array(
+		$this->array_form_text_js[Text::escape($name)][$format] = array(
 					'js' => $js,
 					);
 	}
@@ -32801,7 +32782,7 @@ function SetFormText( $w, $h, $name, $value = '', $default = '', $title = '', $f
 		$this->SetFormButton( $w, $h, $name, $value, 'js_button', $title, $flags, false, false, $background_col, $border_col, $noprint);	// mPDF 5.2.13 / 14
 		// pos => 1 = no caption, icon only; 0 = caption only 
 		if ($image_id) {
-			$this->form_button_icon[$this->_escape($name)] = array(
+			$this->form_button_icon[Text::escape($name)] = array(
 				'pos' => 1, 	
 				'image_id' => $image_id, 
 				'Indexed' => $indexed, 	/* mPDF 5.2.05 */
@@ -33124,19 +33105,19 @@ function _putform_bt( $form, $hPt ) {
 		$this->_out("/MK << $temp >>");
 		$this->_out('/Ff '.$this->_setflag($form['FF']) );
 		if ( $form['activ'] ) {
-       			$this->_out('/V /'.$this->_escape($form['V']).' ');
-       			$this->_out('/DV /'.$this->_escape($form['V']).' ');
-       			$this->_out('/AS /'.$this->_escape($form['V']).' ');
+       			$this->_out('/V /'.Text::escape($form['V']).' ');
+       			$this->_out('/DV /'.Text::escape($form['V']).' ');
+       			$this->_out('/AS /'.Text::escape($form['V']).' ');
 		} else {
       			$this->_out('/AS /Off ');
 		}
 		if ($this->formUseZapD) {	// mPDF 5.2.05
 			$this->_out('/DA (/F'.$this->fonts['czapfdingbats']['i'].' 0 Tf '.$radio_color.' rg)');		// mPDF 5.2.10
-			$this->_out("/AP << /N << /".$this->_escape($form['V'])." ".($this->n+1)." 0 R /Off /Off >> >>");
+			$this->_out("/AP << /N << /".Text::escape($form['V'])." ".($this->n+1)." 0 R /Off /Off >> >>");
 		}
 		else {
 			$this->_out('/DA (/F'.$this->fonts[$this->CurrentFont['fontkey']]['i'].' 0 Tf '.$radio_color.' rg)');		// mPDF 5.2.10
-			$this->_out("/AP << /N << /".$this->_escape($form['V'])." ".($this->n+1)." 0 R /Off ".($this->n+2)." 0 R >> >>");
+			$this->_out("/AP << /N << /".Text::escape($form['V'])." ".($this->n+1)." 0 R /Off ".($this->n+2)." 0 R >> >>");
 		}
       	$this->_out('/Opt [ '.$this->_textstring($form['OPT']).' '.$this->_textstring($form['OPT']).' ]');
       // 	$this->_out('/Opt [ '.$this->_textstring($form['OPT']).' ]');	// This works just as well?
@@ -33167,14 +33148,14 @@ function _putform_bt( $form, $hPt ) {
 		else
 			$this->_out('/DA (/F'.$this->fonts[$this->CurrentFont['fontkey']]['i'].' 0 Tf '.$radio_color.' rg)');		// mPDF 5.2.10
 		if ( $form['activ'] ) {
-			$this->_out('/V /'.$this->_escape($form['V']).' ');
-			$this->_out('/DV /'.$this->_escape($form['V']).' ');
-			$this->_out('/AS /'.$this->_escape($form['V']).' ');
+			$this->_out('/V /'.Text::escape($form['V']).' ');
+			$this->_out('/DV /'.Text::escape($form['V']).' ');
+			$this->_out('/AS /'.Text::escape($form['V']).' ');
 		}
 		else {
 			$this->_out('/AS /Off ');
 		}
-		$this->_out("/AP << /N << /".$this->_escape($form['V'])." ".($this->n+1)." 0 R /Off ".($this->n+2)." 0 R >> >>");
+		$this->_out("/AP << /N << /".Text::escape($form['V'])." ".($this->n+1)." 0 R /Off ".($this->n+2)." 0 R >> >>");
 	//	$this->_out('/Opt [ '.$this->_textstring($form['OPT']).' '.$this->_textstring($form['OPT']).' ]');
 	}
 

@@ -209,12 +209,26 @@ class Text
 		}
 	}
 	
-	static function charDefined(&$cw, $u) {
+	static function charDefined(&$cw, $u)
+	{
 		global $ords;
 		if ($u == 0) {
 			return false;
 		}
 		$w = ($ords[$cw[$u*2]] << 8) + $ords[$cw[$u*2+1]];
 		return $w? true : false;
+	}
+	
+	static function escape($s)
+	{
+		return strtr($s, array(')' => '\\)', '(' => '\\(', '\\' => '\\\\', "\xd" => '\r'));
+	}
+	
+	static function lesser_entity_decode($html)
+	{
+		//supports the most used entity codes (only does ascii safe characters)
+		return str_replace(array('&nbsp;', '&lt;', '&gt;', '&apos;', '&quot;', '&amp;'),
+						   array(' ', '<', '>', "'", '"', '&'),
+						   $html);
 	}
 }
