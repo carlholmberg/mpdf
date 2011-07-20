@@ -3492,7 +3492,7 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
 			$s.=sprintf('BT '.$aix,($this->x+$dx)*$k,($this->h-($this->y+$baseline+$va))*$k);
 			$t = explode(' ',$txt);
 			$s.=sprintf(' %.3f Tc [',$this->charspacing);
-			for($i=0;$i<count($t);$i++) {
+			for($i=0, $len=count($t); $i<$len; $i++) {
 				$tx = $t[$i]; 
 				//Convert string to UTF-16BE without BOM
 				$tx = $this->UTF8ToUTF16BE($tx , false);
@@ -3601,12 +3601,12 @@ function _kern($txt, $mode, $aix, $x, $y) {
 		  $space=Text::escape($space ); 
 		  $s = sprintf(' BT '.$aix,$x*MPDF_K,($this->h-$y)*MPDF_K);
 		  $t = explode(' ',$txt);
-		  for($i=0;$i<count($t);$i++) {
+		  for($i=0, $len=coutn($t); $i<$len; $i++) {
 			$tx = $t[$i]; 
 
 			$tj = '(';
 			$unicode = $this->UTF8StringToArray($tx);
-			for($ti=0;$ti<count($unicode);$ti++) {
+			for($ti=0, $leni=count($unicode); $ti<$leni; $ti++) {
 				if ($ti > 0 && isset($this->CurrentFont['kerninfo'][$unicode[($ti-1)]][$unicode[$ti]]))  {
 							$kern = -$this->CurrentFont['kerninfo'][$unicode[($ti-1)]][$unicode[$ti]];
 							$tj .= sprintf(')%d(',$kern);
@@ -3629,7 +3629,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 	$s = '';
 	$tj = '(';
 	$unicode = $this->UTF8StringToArray($txt);
-	for($i=0;$i<count($unicode);$i++) {
+	for($i=0, $len=count($unicode); $i<$len; $i++) {
 		if ($i > 0 && isset($this->CurrentFont['kerninfo'][$unicode[($i-1)]][$unicode[$i]])) {
 					$kern = -$this->CurrentFont['kerninfo'][$unicode[($i-1)]][$unicode[$i]];
 					$tj .= sprintf(')%d(',$kern);
@@ -3695,7 +3695,7 @@ function _smallCaps($txt, $mode, $aix, $dx, $k, $baseline, $va, $space) {
 	   }
 	}
 	else {
-	   for($i=0;$i<strlen($txt);$i++) {
+	   for($i=0, $len=strlen($txt); $i<$len; $i++) {
 		if (isset($this->upperCase[ord($txt[$i])]) && $this->upperCase[ord($txt[$i])] < 256) { 
 			if (!$upp) { 
 				if (count($str)) { $bits[] = array($upp, $str, false); }
@@ -5376,7 +5376,7 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 				if ($objattr['subtype']=='PASSWORD') { $flags[] = 14; }
 				if ($objattr['onChange']) { $js = $objattr['onChange']; }
 				$data = array('VAL' => array(), 'OPT' => array(), 'SEL' => array(), );
-				for($i=0; $i<count($objattr['items']); $i++) {
+				for($i=0, $oblen=count($objattr['items']); $i<$oblen; $i++) {
 					$item = $objattr['items'][$i];
 					$data['VAL'][] = $item['exportValue'];
 					$data['OPT'][] = $item['content'];
@@ -5829,7 +5829,7 @@ function WriteFlowingBlock( $s)
 
 		if (!$success && ($this->hyphenate || ($this->hyphenateTables && $is_table))) { 
 			// Look ahead to get current word
-			for($ac = $i; $ac<(mb_strlen($s)-1); $ac++) {
+			for($ac = $i, $aclen=mb_strlen($s)-1; $ac<$aclen; $ac++) {
 				$addc = mb_substr($s,$ac,1,$this->mb_enc );
 				if ($addc == ' ') { break; }
 				$currWord .= $addc;
