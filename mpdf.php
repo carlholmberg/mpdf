@@ -5183,12 +5183,12 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 /*-- END BACKGROUNDS --*/
 /*-- IMAGES-WMF --*/
 			if (isset($objattr['itype']) && $objattr['itype']=='wmf') { 
-				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*$this->k-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*MPDF_K)+$sy*$objattr['wmf_y'], $objattr['ID']);
+				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*MPDF_K-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*MPDF_K)+$sy*$objattr['wmf_y'], $objattr['ID']);
 			}
 			else  
 /*-- END IMAGES-WMF --*/
 			if (isset($objattr['itype']) && $objattr['itype']=='svg') { 
-				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*$this->k-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*MPDF_K)+$sy*$objattr['wmf_y'], $objattr['ID']);
+				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*MPDF_K-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*MPDF_K)+$sy*$objattr['wmf_y'], $objattr['ID']);
 			}
 			else { 
 				$outstring = sprintf("q ".$tr."%.3f 0 0 %.3f %.3f %.3f cm ".$gradmask."/I%d Do Q",$obiw*MPDF_K, $obih*MPDF_K, $objattr['INNER-X'] *MPDF_K, ($this->h-($objattr['INNER-Y'] +$obih ))*MPDF_K,$objattr['ID'] );
@@ -6675,14 +6675,14 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='',$paint=true, $constrain=t
 	  if ($info['type']=='wmf') { 
 		$sx = $w*MPDF_K / $info['w'];
 		$sy = -$h*MPDF_K / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*MPDF_K-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	  }
 	  else  
 /*-- END IMAGES-WMF --*/
 	  if ($info['type']=='svg') { 
 		$sx = $w*MPDF_K / $info['w'];
 		$sy = -$h*MPDF_K / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*MPDF_K-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	  }
 	  else { 
 		$outstring = sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$w*MPDF_K,$h*MPDF_K,$x*MPDF_K,($this->h-($y+$h))*MPDF_K,$info['i']);
@@ -6745,14 +6745,14 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='',$paint=true, $constrain=t
 	if ($info['type']=='wmf') { 
 		$sx = $w*MPDF_K / $info['w'];
 		$sy = -$h*MPDF_K / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*MPDF_K-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	}
 	else  
 /*-- END IMAGES-WMF --*/
 	if ($info['type']=='svg') { 
 		$sx = $w*MPDF_K / $info['w'];
 		$sy = -$h*MPDF_K / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*MPDF_K-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	}
 	else { 
 		$outstring = sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$w*MPDF_K,$h*MPDF_K,$x*MPDF_K,($this->h-($y+$h))*MPDF_K,$info['i']);
