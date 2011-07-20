@@ -132,7 +132,7 @@ class Color
 	{
 		// Input is HSL value of complementary colour, held in $h2, $s, $l as fractions of 1
 		// Output is RGB in normal 255 255 255 format, held in $r, $g, $b
-		// Hue is converted using function hue_2_rgb, shown at the end of this code
+		// Hue is converted using function hue2rgb, shown at the end of this code
 		if ($s2 == 0) {
 			$r = $l2 * 255;
 			$g = $l2 * 255;
@@ -142,9 +142,9 @@ class Color
 			if ($l2 < 0.5) { $var_2 = $l2 * (1 + $s2); }
 			else { $var_2 = ($l2 + $s2) - ($s2 * $l2); }
 			$var_1 = 2 * $l2 - $var_2;
-			$r = round(255 * self::hue_2_rgb($var_1,$var_2,$h2 + (1 / 3)));
-			$g = round(255 * self::hue_2_rgb($var_1,$var_2,$h2));
-			$b = round(255 * self::hue_2_rgb($var_1,$var_2,$h2 - (1 / 3)));
+			$r = round(255 * self::hue2rgb($var_1,$var_2,$h2 + (1 / 3)));
+			$g = round(255 * self::hue2rgb($var_1,$var_2,$h2));
+			$b = round(255 * self::hue2rgb($var_1,$var_2,$h2 - (1 / 3)));
 		}
 		return array($r,$g,$b);
 	}
