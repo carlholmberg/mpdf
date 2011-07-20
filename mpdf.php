@@ -62,7 +62,7 @@ require_once('classes/helpers.php');
 // Create the $chrs and $ords global variables
 for ($i=0; $i<256; $i++) {
 	$chrs[$i] = chr($i);
-	$rds[chr($i)] = $i;
+	$ords[chr($i)] = $i;
 }
 
 class mPDF
