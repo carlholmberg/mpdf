@@ -13569,7 +13569,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 			if (strlen($e) == 0) { continue; }
 
 			$e = strcode2utf($e);
-			$e = Text::lesser_entity_decode(($e);
+			$e = Text::lesser_entity_decode($e);
 
 			if ($this->checkSIP && $this->CurrentFont['sipext'] && !$this->usingCoreFont && $this->subPos<$i && !$this->specialcontent) { 
 				$cnt += $this->SubstituteCharsSIP($a, $i, $e); 
@@ -30765,7 +30765,7 @@ function all_entities_to_utf8($txt) {
 	// converts all &#nnn; or &#xHHH; to UTF-8 multibyte
 	$txt = strcode2utf($txt);
 
-	$txt = Text::lesser_entity_decode(($txt);
+	$txt = Text::lesser_entity_decode($txt);
 	return ($txt);
 }
 
@@ -31273,7 +31273,7 @@ function AutoFont($html) {
 	foreach($a as $i => $e) {
 	   if($i%2==0) {
 		$e = strcode2utf($e);
-		$e = Text::lesser_entity_decode(($e);
+		$e = Text::lesser_entity_decode($e);
 
 		// Use U=FFF0 and U+FFF1 to mark start and end of span tags to prevent nesting occurring
 		// "\xef\xbf\xb0" ##lthtmltag## "\xef\xbf\xb1" ##gthtmltag##
