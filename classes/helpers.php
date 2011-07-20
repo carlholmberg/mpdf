@@ -16,7 +16,7 @@
 
 class Color
 {
-	function lighten($c)
+	static function lighten($c)
 	{
 		if (isset($c['R'])) {
 			die('Color error in Color::lighten()');
@@ -35,7 +35,7 @@ class Color
 	}
 	
 	
-	function darken($c)
+	static function darken($c)
 	{
 		if (isset($c['R'])) {
 			die('Color error in Color::darken()');
@@ -185,5 +185,36 @@ class Color
 		else if ($cor[0]==5) $s = 'rgba('.$cor[1].','.$cor[2].','.$cor[3].','.$cor[4].')';
 		else if ($cor[0]==6) $s = 'cmyka('.$cor[1].','.$cor[2].','.$cor[3].','.$cor[4].','.$cor[5].')';
 		return $s;
+	}
+}
+
+class Text
+{
+	static function getCharWidth(&$cw, $u, $isdef=true)
+	{
+		global $ords;
+		if ($u == 0) {
+			$w = false;
+		} else {
+			$w = ($ords[$cw[$u*2]] << 8) + $ords[$cw[$u*2+1]];
+		}
+		if ($w == 65535) {
+			return 0;
+		} else if ($w) {
+			return $w;
+		} else if ($isdef) {
+			return false;
+		} else {
+			return 0;
+		}
+	}
+	
+	static function charDefined(&$cw, $u) {
+		global $ords;
+		if ($u == 0) {
+			return false;
+		}
+		$w = ($ords[$cw[$u*2]] << 8) + $ords[$cw[$u*2+1]];
+		return $w? true : false;
 	}
 }

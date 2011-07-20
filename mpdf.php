@@ -2591,21 +2591,6 @@ function SetTextColor($r,$g=-1,$b=-1,$col4=-1, $return=false) {	// mPDF 5.2.03
 	return $out;
 }
 
-function _getCharWidth(&$cw, $u, $isdef=true) {
-	if ($u==0) { $w = false; }
-	else { $w = (ord($cw[$u*2]) << 8) + ord($cw[$u*2+1]); }
-	if ($w == 65535) { return 0; }
-	else if ($w) { return $w; }
-	else if ($isdef) { return false; }
-	else { return 0; }
-}
-
-function _charDefined(&$cw, $u) {
-	if ($u==0) { return false; }
-	$w = (ord($cw[$u*2]) << 8) + ord($cw[$u*2+1]);
-	if ($w) { return true; }
-	else { return false; }
-}
 
 function GetStringWidth($s, $addSubset=true) {
 			//Get width of a string in the current font
@@ -2614,6 +2599,10 @@ function GetStringWidth($s, $addSubset=true) {
 			$w = 0;
 			$kerning = 0;
 			$lastchar = 0;
+			
+			global $ords;
+			global $chrs;
+			
 			// mPDF ITERATION
 			if ($this->iterationCounter) $s = preg_replace('/{iteration ([a-zA-Z0-9_]+)}/', '\\1', $s);
 
@@ -2631,7 +2620,7 @@ function GetStringWidth($s, $addSubset=true) {
 					foreach($unicode as $char) {
 						if ($char == 173) { continue; }	// Soft Hyphens
 						else if ($this->S && isset($this->upperCase[$char])) {
-							$charw = $this->_getCharWidth($cw,$this->upperCase[$char]);
+							$charw = Text::getCharWidth($cw,$this->upperCase[$char]);
 							if ($charw!==false) { 
 								$charw = $charw*$this->smCapsScale * $this->smCapsStretch/100;
 								$w+=$charw; 
@@ -2641,7 +2630,7 @@ function GetStringWidth($s, $addSubset=true) {
 							else { $w += 500; }
 						}
 						else {
-							$charw = $this->_getCharWidth($cw,$char);
+							$charw = Text::getCharWidth($cw,$char);
 							if ($charw!==false) { $w+=$charw; }
 							elseif(isset($this->CurrentFont['desc']['MissingWidth'])) { $w += $this->CurrentFont['desc']['MissingWidth']; }
 							elseif(isset($this->CurrentFont['MissingWidth'])) { $w += $this->CurrentFont['MissingWidth']; }
@@ -2663,8 +2652,8 @@ function GetStringWidth($s, $addSubset=true) {
 					if ($s[$i] == "\xad" && $this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') { 
 						continue;
 					}
-					else if ($this->S && isset($this->upperCase[ord($s[$i])])) { 
-						$charw = $cw[chr($this->upperCase[ord($s[$i])])];
+					else if ($this->S && isset($this->upperCase[$ords[$s[$i]]])) { 
+						$charw = $cw[$chrs[$this->upperCase[$ords[$s[$i]]]]];
 						if ($charw!==false) { 
 							$charw = $charw*$this->smCapsScale * $this->smCapsStretch/100;
 							$w+=$charw; 
@@ -2673,8 +2662,8 @@ function GetStringWidth($s, $addSubset=true) {
 					else if (isset($cw[$s[$i]])) { 
 						$w += $cw[$s[$i]]; 
 					} 
-					else if (isset($cw[ord($s[$i])])) { 
-						$w += $cw[ord($s[$i])]; 
+					else if (isset($cw[$ords[$s[$i]]])) { 
+						$w += $cw[$ords[$s[$i]]]; 
 					}
 					if ($this->kerning && $this->useKerning) {
 						if (isset($this->CurrentFont['kerninfo'][$s[($i-1)]][$s[$i]])) { 
@@ -5422,7 +5411,7 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 			  if ($this->PDFA || $this->PDFX) {
 				if (($this->PDFA && !$this->PDFAauto) || ($this->PDFX && !$this->PDFXauto)) { $this->PDFAXwarnings[] = "Core Adobe font Zapfdingbats cannot be embedded in mPDF - used in Form element: Select - which is required for PDFA1-b or PDFX/1-a. (Different character/font will be substituted.)"; }
 			   	$this->SetFont('sans');
-				if ($this->_charDefined($this->CurrentFont['cw'], 9660)) { $down = "\xe2\x96\xbc"; }	// mPDF 5.1.003
+				if (Text::charDefined($this->CurrentFont['cw'], 9660)) { $down = "\xe2\x96\xbc"; }	// mPDF 5.1.003
 				else { $down = '='; }
 				$this->Cell(($this->FontSize*1.4),$h,$down,1,0,'C',1,'',0,0,0, 'M') ;
 			  }
@@ -8202,7 +8191,7 @@ function _putfonts() {
 			$widthstring = '';
 			$toUnistring = '';
 			foreach($font['subsets'][$sfid] AS $cp=>$u) {
-				$w = $this->_getCharWidth($font['cw'], $u); 
+				$w = Text::getCharWidth($font['cw'], $u); 
 				if ($w !== false) {
 					$widthstring .= $w.' ';
 				}
@@ -19569,9 +19558,9 @@ function OpenTag($tag,$attr)
 			$blt = $this->listnum.$this->list_number_suffix;
             	break;
 		default:
-			if ($this->listlvl % 3 == 1 && $this->_charDefined($this->CurrentFont['cw'],8226)) { $blt = "\xe2\x80\xa2"; } 	// &#8226; 
-			else if ($this->listlvl % 3 == 2 && $this->_charDefined($this->CurrentFont['cw'],9900)) { $blt = "\xe2\x9a\xac"; } // &#9900; 
-			else if ($this->listlvl % 3 == 0 && $this->_charDefined($this->CurrentFont['cw'],9642)) { $blt = "\xe2\x96\xaa"; } // &#9642; 
+			if ($this->listlvl % 3 == 1 && Text::charDefined($this->CurrentFont['cw'],8226)) { $blt = "\xe2\x80\xa2"; } 	// &#8226; 
+			else if ($this->listlvl % 3 == 2 && Text::charDefined($this->CurrentFont['cw'],9900)) { $blt = "\xe2\x9a\xac"; } // &#9900; 
+			else if ($this->listlvl % 3 == 0 && Text::charDefined($this->CurrentFont['cw'],9642)) { $blt = "\xe2\x96\xaa"; } // &#9642; 
 			else { $blt = '-'; }
 			break;
 		}
@@ -20798,7 +20787,7 @@ function printlistbuffer() {
 	// mPDF 5.1.017 - throughout function (uses $list_item_marker instead of $type)
 	// mPDF 5.1.018
 	if (preg_match('/U\+([a-fA-F0-9]+)/i',$type,$m)) {
-		if ($this->_charDefined($this->CurrentFont['cw'],hexdec($m[1]))) { $list_item_marker = codeHex2utf($m[1]); }
+		if (Text::charDefined($this->CurrentFont['cw'],hexdec($m[1]))) { $list_item_marker = codeHex2utf($m[1]); }
 		else { $list_item_marker = '-'; }
 		$blt_width = $this->GetStringWidth($list_item_marker);
 		$typefont = '';
@@ -20877,7 +20866,7 @@ function printlistbuffer() {
               break;
           case 'disc':
 		  if ($this->PDFA || $this->PDFX) {
-			if ($this->_charDefined($this->CurrentFont['cw'],8226)) { $list_item_marker = "\xe2\x80\xa2"; } 	// &#8226; 
+			if (Text::charDefined($this->CurrentFont['cw'],8226)) { $list_item_marker = "\xe2\x80\xa2"; } 	// &#8226; 
 			else { $list_item_marker = '-'; }
   			$blt_width = $this->GetStringWidth($list_item_marker);
 			break;
@@ -20888,7 +20877,7 @@ function printlistbuffer() {
               break;
           case 'circle':
 		  if ($this->PDFA || $this->PDFX) {
-			if ($this->_charDefined($this->CurrentFont['cw'],9900)) { $list_item_marker = "\xe2\x9a\xac"; } // &#9900; 
+			if (Text::charDefined($this->CurrentFont['cw'],9900)) { $list_item_marker = "\xe2\x9a\xac"; } // &#9900; 
 			else { $list_item_marker = '-'; }
   			$blt_width = $this->GetStringWidth($list_item_marker);
 			break;
@@ -20899,7 +20888,7 @@ function printlistbuffer() {
               break;
           case 'square':
 		  if ($this->PDFA || $this->PDFX) {
-			if ($this->_charDefined($this->CurrentFont['cw'],9642)) { $list_item_marker = "\xe2\x96\xaa"; } // &#9642; 
+			if (Text::charDefined($this->CurrentFont['cw'],9642)) { $list_item_marker = "\xe2\x96\xaa"; } // &#9642; 
 			else { $list_item_marker = '-'; }
   			$blt_width = $this->GetStringWidth($list_item_marker);
 			break;
@@ -30478,14 +30467,14 @@ function SubstituteCharsMB(&$writehtml_a, &$writehtml_i, &$writehtml_e) {
 	$ftype = '';
 	$u = array();
 	foreach($unicode AS $c => $char) {
-		if (($flag == 0 || $flag==2) && (!$this->_charDefined($cw,$char) || ($flag==2 && $char==32)) && $this->checkSIP && $char > 131071) { 	// Unicode Plane 2 (SIP)
+		if (($flag == 0 || $flag==2) && (!Text::charDefined($cw,$char) || ($flag==2 && $char==32)) && $this->checkSIP && $char > 131071) { 	// Unicode Plane 2 (SIP)
 			if (in_array($this->FontFamily ,$this->available_CJK_fonts)) { return 0; }
 			if ($flag==0) { $start=$c; }
 			$flag=2; 
 			$u[] = $char;
 		}
-		//else if (($flag == 0 || $flag==1) && $char != 173 && !$this->_charDefined($cw,$char) && ($char<1423 ||  ($char>3583 && $char < 11263))) { 
-		else if (($flag == 0 || $flag==1) && $char != 173 && (!$this->_charDefined($cw,$char) || ($flag==1 && $char==32)) && ($char<1536 ||  ($char>1791 && $char < 2304) || $char>3455)) { 
+		//else if (($flag == 0 || $flag==1) && $char != 173 && !Text::charDefined($cw,$char) && ($char<1423 ||  ($char>3583 && $char < 11263))) { 
+		else if (($flag == 0 || $flag==1) && $char != 173 && (!Text::charDefined($cw,$char) || ($flag==1 && $char==32)) && ($char<1536 ||  ($char>1791 && $char < 2304) || $char>3455)) { 
 			if ($flag==0) { $start=$c; }
 			$flag=1; 
 			$u[] = $char;
@@ -30513,7 +30502,7 @@ function SubstituteCharsMB(&$writehtml_a, &$writehtml_i, &$writehtml_e) {
 		if (!$cw) { return 0; }
 		$l = 0;
 		foreach($u AS $char) {
-			if ($this->_charDefined($cw,$char) || $char > 131071) {
+			if (Text::charDefined($cw,$char) || $char > 131071) {
 				$l++;
 			}
 			else { break; }
@@ -30547,7 +30536,7 @@ function SubstituteCharsMB(&$writehtml_a, &$writehtml_i, &$writehtml_e) {
 		if (!$cw) { return 0; }
 		$l = 0;
 		foreach($u AS $char) {
-			if ($this->_charDefined($cw,$char) || $char > 131071) {
+			if (Text::charDefined($cw,$char) || $char > 131071) {
 				$l++;
 			}
 			else { break; }
@@ -30630,7 +30619,7 @@ function SubstituteCharsMB(&$writehtml_a, &$writehtml_i, &$writehtml_e) {
 		if (!$cw) { continue; }
 		$l = 0;
 		foreach($u AS $char) {
-			if ($char == 173 || $this->_charDefined($cw,$char) || ($char>1536 && $char<1791) || ($char>2304 && $char<3455 )) { 	// Arabic and Indic 
+			if ($char == 173 || Text::charDefined($cw,$char) || ($char>1536 && $char<1791) || ($char>2304 && $char<3455 )) { 	// Arabic and Indic 
 				$l++;
 			}
 			else {
@@ -30994,8 +30983,8 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 
 			$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*MPDF_K);	// 3mm numerals (FontSize is larger to account for space above/below characters)
 
-			if (!$this->usingCoreFont) { $cw = $this->_getCharWidth($this->CurrentFont['cw'],32)*3*$fh*$size/1000; }	// character width at 3mm
-			else { $cw = $this->_getCharWidth($this->CurrentFont['cw'],48)*3*$fh*$size/1000; }		// 48 == char "0"
+			if (!$this->usingCoreFont) { $cw = Text::getCharWidth($this->CurrentFont['cw'],32)*3*$fh*$size/1000; }	// character width at 3mm
+			else { $cw = Text::getCharWidth($this->CurrentFont['cw'],48)*3*$fh*$size/1000; }		// 48 == char "0"
 
 			// Outer left character
 			$y_text = $y + $paddingT + $bch - ($num_height/2); 
@@ -32051,7 +32040,7 @@ function dec2other($num, $cp) {
 	$nstr = (string) $num;
 	$rnum = '';
 	for ($i=0;$i<strlen($nstr);$i++) { 
-		if ($this->_charDefined($this->CurrentFont['cw'],$cp+intval($nstr[$i]))) { // contains arabic-indic numbers
+		if (Text::charDefined($this->CurrentFont['cw'],$cp+intval($nstr[$i]))) { // contains arabic-indic numbers
 			$rnum .= code2utf($cp+intval($nstr[$i]));
 		}
 		else { $rnum .= $nstr[$i]; }
