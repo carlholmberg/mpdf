@@ -27,6 +27,9 @@ define('_BORDER_RIGHT',4);
 define('_BORDER_BOTTOM',2);
 define('_BORDER_LEFT',1);
 
+//Scale factor - will only use mm
+define('MPDF_K', 72/25.4);
+
 if (!defined('_MPDF_PATH')) define('_MPDF_PATH', dirname(preg_replace('/\\\\/','/',__FILE__)) . '/');
 if (!defined('_MPDF_URI')) define('_MPDF_URI',_MPDF_PATH);
 
@@ -815,7 +818,6 @@ var $compress;           //compression flag
 var $DefOrientation;     //default orientation
 var $CurOrientation;     //current orientation
 var $OrientationChanges; //array indicating orientation changes
-var $k;                  //scale factor (number of points in user unit)
 var $fwPt;
 var $fhPt;         //dimensions of page format in points
 var $fw;
@@ -1180,9 +1182,6 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 
 	require(_MPDF_PATH.'config.php');	// config data
 
-	//Scale factor
-	$this->k=72/25.4;	// Will only use mm
-
 	$this->_setPageSize($format, $orientation);
 	$this->DefOrientation=$orientation;
 
@@ -1215,7 +1214,7 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	$this->cMarginL = 1;
 	$this->cMarginR = 1;
 	//Line width (0.2 mm)
-	$this->LineWidth=.567/$this->k;
+	$this->LineWidth=.567/MPDF_K;
 
 	//To make the function Footer() work - replaces {nb} with page number
 	$this->AliasNbPages();
@@ -1332,7 +1331,7 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	}
 	if (!$default_font_size) { 
 		$mmsize = $this->ConvertSize($this->defaultCSS['BODY']['FONT-SIZE']);
-		$default_font_size = $mmsize*($this->k);
+		$default_font_size = $mmsize*(MPDF_K);
 	}
 
 	if ($default_font) { $this->SetDefaultFont($default_font); }
@@ -1447,11 +1446,11 @@ function _setPageSize($format, &$orientation) {
 	else
 	{
 		if (!$format[0] || !$format[1]) { $this->Error('Invalid page format: '.$format[0].' '.$format[1]); }
-		$this->fwPt=$format[0]*$this->k;
-		$this->fhPt=$format[1]*$this->k;
+		$this->fwPt=$format[0]*MPDF_K;
+		$this->fhPt=$format[1]*MPDF_K;
 	}
-	$this->fw=$this->fwPt/$this->k;
-	$this->fh=$this->fhPt/$this->k;
+	$this->fw=$this->fwPt/MPDF_K;
+	$this->fh=$this->fhPt/MPDF_K;
 	//Page orientation
 	$orientation=strtolower($orientation);
 	if($orientation=='p' or $orientation=='portrait')
@@ -1469,8 +1468,8 @@ function _setPageSize($format, &$orientation) {
 	else $this->Error('Incorrect orientation: '.$orientation);
 	$this->CurOrientation=$orientation;
 
-	$this->w=$this->wPt/$this->k;
-	$this->h=$this->hPt/$this->k;
+	$this->w=$this->wPt/MPDF_K;
+	$this->h=$this->hPt/MPDF_K;
 }
 
 function _getPageFormat($format) {
@@ -1875,8 +1874,8 @@ function Close() {
 
 /*-- BACKGROUNDS --*/
 function _resizeBackgroundImage($imw, $imh, $cw, $ch, $resize=0, $repx, $repy) {
-	$cw = $cw*$this->k;
-	$ch = $ch*$this->k;
+	$cw = $cw*MPDF_K;
+	$ch = $ch*MPDF_K;
 	if (!$resize) { return array($imw, $imh, $repx, $repy); }
 	if ($resize==1 && $imw > $cw) {
 		$h = $imh * $cw/$imw;
@@ -1933,8 +1932,8 @@ function SetBackground(&$properties, &$maxwidth) {
 		$sizesarray = $this->Image($file,0,0,0,0,'','',false, false, false, false, true);
 		if (isset($sizesarray['IMAGE_ID'])) {
 			$image_id = $sizesarray['IMAGE_ID'];
-			$orig_w = $sizesarray['WIDTH']*$this->k;		// in user units i.e. mm
- 			$orig_h = $sizesarray['HEIGHT']*$this->k;		// (using $this->img_dpi)
+			$orig_w = $sizesarray['WIDTH']*MPDF_K;		// in user units i.e. mm
+ 			$orig_h = $sizesarray['HEIGHT']*MPDF_K;		// (using $this->img_dpi)
 			if (isset($properties['BACKGROUND-IMAGE-RESOLUTION'])) { 
 				if (preg_match('/from-image/i', $properties['BACKGROUND-IMAGE-RESOLUTION']) && isset($sizesarray['set-dpi']) && $sizesarray['set-dpi']>0) {
 					$orig_w *= $this->img_dpi / $sizesarray['set-dpi'];
@@ -1996,7 +1995,7 @@ function PrintBodyBackgrounds() {
 		else if ($this->bodyBackgroundColor[0]==6) {	// CMYKa
 			$s .= $this->SetAlpha($this->bodyBackgroundColor[5], 'Normal', true, 'F')."\n";
 		}
-		$s .= sprintf('%.3f %.3f %.3f %.3f re f Q', ($clx*$this->k), ($cly*$this->k),$clw*$this->k,$clh*$this->k)."\n";
+		$s .= sprintf('%.3f %.3f %.3f %.3f re f Q', ($clx*MPDF_K), ($cly*MPDF_K),$clw*MPDF_K,$clh*MPDF_K)."\n";
 	}
 
 /*-- BACKGROUNDS --*/
@@ -2022,7 +2021,7 @@ function PrintBodyBackgrounds() {
 
 			if ($this->bodyBackgroundImage['opacity']>0 && $this->bodyBackgroundImage['opacity']<1) { $opac = $this->SetAlpha($this->bodyBackgroundImage['opacity'],'Normal',true); }
 			else { $opac = ''; }
-			$s .= sprintf('q /Pattern cs /P%d scn %s %.3f %.3f %.3f %.3f re f Q', $n, $opac, ($clx*$this->k), ($cly*$this->k),$clw*$this->k, $clh*$this->k) ."\n";
+			$s .= sprintf('q /Pattern cs /P%d scn %s %.3f %.3f %.3f %.3f re f Q', $n, $opac, ($clx*MPDF_K), ($cly*MPDF_K),$clw*MPDF_K, $clh*MPDF_K) ."\n";
 	   }
 	}
 /*-- END BACKGROUNDS --*/
@@ -2044,7 +2043,7 @@ function PrintPageBackgrounds($adjustmenty=0) {
 			else if ($pb['col'][0]==6) {	// CMYKa
 				$s .= $this->SetAlpha($pb['col'][5], 'Normal', true, 'F')."\n";
 			}
-			$s .= sprintf('%.3f %.3f %.3f %.3f re f Q',$pb['x']*$this->k,($this->h-$pb['y'])*$this->k,$pb['w']*$this->k,-$pb['h']*$this->k)."\n";
+			$s .= sprintf('%.3f %.3f %.3f %.3f re f Q',$pb['x']*MPDF_K,($this->h-$pb['y'])*MPDF_K,$pb['w']*MPDF_K,-$pb['h']*MPDF_K)."\n";
 			if (isset($pb['clippath']) && $pb['clippath']) { $s .= 'Q'."\n"; }
 		  }
 		}
@@ -2061,14 +2060,14 @@ function PrintPageBackgrounds($adjustmenty=0) {
 			$n = count($this->patterns)+1;
 			list($orig_w, $orig_h, $x_repeat, $y_repeat) = $this->_resizeBackgroundImage($pb['orig_w'], $pb['orig_h'], $pb['w'], $pb['h'], $pb['resize'], $pb['x_repeat'], $pb['y_repeat']);
 			$this->patterns[$n] = array('x'=>$pb['x'], 'y'=>$pb['y'], 'w'=>$pb['w'], 'h'=>$pb['h'], 'pgh'=>$this->h, 'image_id'=>$pb['image_id'], 'orig_w'=>$orig_w, 'orig_h'=>$orig_h, 'x_pos'=>$pb['x_pos'], 'y_pos'=>$pb['y_pos'], 'x_repeat'=>$x_repeat, 'y_repeat'=>$y_repeat, 'itype'=>$pb['itype']);
-			$x = $pb['x']*$this->k;
-			$y = ($this->h - $pb['y'])*$this->k;
-			$w = $pb['w']*$this->k;
-			$h = -$pb['h']*$this->k;
+			$x = $pb['x']*MPDF_K;
+			$y = ($this->h - $pb['y'])*MPDF_K;
+			$w = $pb['w']*MPDF_K;
+			$h = -$pb['h']*MPDF_K;
 			if (isset($pb['clippath']) && $pb['clippath']) { $s .= $pb['clippath']."\n"; }
 			if ($this->writingHTMLfooter || $this->writingHTMLheader) {
-				$iw = $pb['orig_w']/$this->k;
-				$ih = $pb['orig_h']/$this->k;
+				$iw = $pb['orig_w']/MPDF_K;
+				$ih = $pb['orig_h']/MPDF_K;
 				$w = $pb['w'];
 				$h = $pb['h'];
 				$x0 = $pb['x'];
@@ -2104,7 +2103,7 @@ function PrintPageBackgrounds($adjustmenty=0) {
 					$y = $y0 + $y_pos + ($ih*$yi);
 					if ($pb['opacity']>0 && $pb['opacity']<1) { $opac = $this->SetAlpha($pb['opacity'],'Normal',true); }
 					else { $opac = ''; }
-					$s .= sprintf("q %s %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q", $opac,$iw*$this->k,$ih*$this->k,$x*$this->k,($this->h-($y+$ih))*$this->k,$pb['image_id']) ."\n";
+					$s .= sprintf("q %s %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q", $opac,$iw*MPDF_K,$ih*MPDF_K,$x*MPDF_K,($this->h-($y+$ih))*MPDF_K,$pb['image_id']) ."\n";
 				  }
 				}
 			}
@@ -2130,7 +2129,7 @@ function PrintTableBackgrounds($adjustmenty=0) {
 		foreach ($pbs AS $pb) {
 	 	 if ((!isset($pb['gradient']) || !$pb['gradient']) && (!isset($pb['image_id']) || !$pb['image_id'])) {
 			$s .= $this->SetFColor($pb['col'], true)."\n";
-			$s .= sprintf('%.3f %.3f %.3f %.3f re %s',$pb['x']*$this->k,($this->h-$pb['y'])*$this->k,$pb['w']*$this->k,-$pb['h']*$this->k,'f')."\n";
+			$s .= sprintf('%.3f %.3f %.3f %.3f re %s',$pb['x']*MPDF_K,($this->h-$pb['y'])*MPDF_K,$pb['w']*MPDF_K,-$pb['h']*MPDF_K,'f')."\n";
 		  }
 	 	 if (isset($pb['gradient']) && $pb['gradient']) {
 			if (isset($pb['clippath']) && $pb['clippath']) { $s .= $pb['clippath']."\n"; }
@@ -2143,10 +2142,10 @@ function PrintTableBackgrounds($adjustmenty=0) {
 			$n = count($this->patterns)+1;
 			list($orig_w, $orig_h, $x_repeat, $y_repeat) = $this->_resizeBackgroundImage($pb['orig_w'], $pb['orig_h'], $pb['w'], $pb['h'], $pb['resize'], $pb['x_repeat'], $pb['y_repeat']);
 			$this->patterns[$n] = array('x'=>$pb['x'], 'y'=>$pb['y'], 'w'=>$pb['w'], 'h'=>$pb['h'], 'pgh'=>$this->h, 'image_id'=>$pb['image_id'], 'orig_w'=>$orig_w, 'orig_h'=>$orig_h, 'x_pos'=>$pb['x_pos'], 'y_pos'=>$pb['y_pos'], 'x_repeat'=>$x_repeat, 'y_repeat'=>$y_repeat, 'itype'=>$pb['itype']);
-			$x = $pb['x']*$this->k;
-			$y = ($this->h - $pb['y'])*$this->k;
-			$w = $pb['w']*$this->k;
-			$h = -$pb['h']*$this->k;
+			$x = $pb['x']*MPDF_K;
+			$y = ($this->h - $pb['y'])*MPDF_K;
+			$w = $pb['w']*MPDF_K;
+			$h = -$pb['h']*MPDF_K;
 			if (isset($pb['clippath']) && $pb['clippath']) { $s .= $pb['clippath']."\n"; }
 			if ($pb['opacity']>0 && $pb['opacity']<1) { $opac = $this->SetAlpha($pb['opacity'],'Normal',true); }
 			else { $opac = ''; }
@@ -2249,7 +2248,7 @@ function AddPage($orientation='',$condition='', $resetpagenum='', $pagenumstyle=
 		$this->FontFamily='';
 		$this->_out('2 J');
 		$this->LineWidth=$lw;
-		$this->_out(sprintf('%.3f w',$lw*$this->k));
+		$this->_out(sprintf('%.3f w',$lw*MPDF_K));
 		if($family)	$this->SetFont($family,$style,$size,true,true);
 		$this->DrawColor=$dc;
 		if($dc!=$this->defDrawColor) $this->_out($dc);
@@ -2414,7 +2413,7 @@ function AddPage($orientation='',$condition='', $resetpagenum='', $pagenumstyle=
 	$this->SetLineCap(2);
 	//Set line width
 	$this->LineWidth=$lw;
-	$this->_out(sprintf('%.3f w',$lw*$this->k));
+	$this->_out(sprintf('%.3f w',$lw*MPDF_K));
 	//Set font
 	if($family)	$this->SetFont($family,$style,$size,true,true);	// forces write
 	//Set colors
@@ -2432,7 +2431,7 @@ function AddPage($orientation='',$condition='', $resetpagenum='', $pagenumstyle=
 	if($this->LineWidth!=$lw)
 	{
 		$this->LineWidth=$lw;
-		$this->_out(sprintf('%.3f w',$lw*$this->k));
+		$this->_out(sprintf('%.3f w',$lw*MPDF_K));
 	}
 	//Restore font
 	if($family)	$this->SetFont($family,$style,$size,true,true);	// forces write
@@ -2695,7 +2694,7 @@ function GetStringWidth($s, $addSubset=true) {
 function SetLineWidth($width) {
 	//Set line width
 	$this->LineWidth=$width;
-	$lwout = (sprintf('%.3f w',$width*$this->k));
+	$lwout = (sprintf('%.3f w',$width*MPDF_K));
 	if($this->page>0 && ((isset($this->pageoutput[$this->page]['LineWidth']) && $this->pageoutput[$this->page]['LineWidth'] != $lwout) || !isset($this->pageoutput[$this->page]['LineWidth']) || $this->keep_block_together)) {
 		 $this->_out($lwout); 
 	}
@@ -2704,7 +2703,7 @@ function SetLineWidth($width) {
 
 function Line($x1,$y1,$x2,$y2) {
 	//Draw a line
-	$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S',$x1*$this->k,($this->h-$y1)*$this->k,$x2*$this->k,($this->h-$y2)*$this->k));
+	$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S',$x1*MPDF_K,($this->h-$y1)*MPDF_K,$x2*MPDF_K,($this->h-$y2)*MPDF_K));
 }
 
 function Arrow($x1,$y1,$x2,$y2,$headsize=3,$fill='B',$angle=25) {
@@ -2725,11 +2724,11 @@ function Arrow($x1,$y1,$x2,$y2,$headsize=3,$fill='B',$angle=25) {
   $y5 = $y3-($y3-$y4)/2;
 
   $s = '';
-  $s.=sprintf('%.3f %.3f m %.3f %.3f l S',$x1*$this->k,($this->h-$y1)*$this->k,$x5*$this->k,$y5*$this->k);
+  $s.=sprintf('%.3f %.3f m %.3f %.3f l S',$x1*MPDF_K,($this->h-$y1)*MPDF_K,$x5*MPDF_K,$y5*MPDF_K);
   $this->_out($s);
 
   $s = '';
-  $s.=sprintf('%.3f %.3f m %.3f %.3f l %.3f %.3f l %.3f %.3f l %.3f %.3f l ',$x5*$this->k,$y5*$this->k,$x3*$this->k,$y3*$this->k,$x2*$this->k,($this->h-$y2)*$this->k,$x4*$this->k,$y4*$this->k,$x5*$this->k,$y5*$this->k);
+  $s.=sprintf('%.3f %.3f m %.3f %.3f l %.3f %.3f l %.3f %.3f l %.3f %.3f l ',$x5*MPDF_K,$y5*MPDF_K,$x3*MPDF_K,$y3*MPDF_K,$x2*MPDF_K,($this->h-$y2)*MPDF_K,$x4*MPDF_K,$y4*MPDF_K,$x5*MPDF_K,$y5*MPDF_K);
   $s.=$fill;
   $this->_out($s);
 }
@@ -2740,7 +2739,7 @@ function Rect($x,$y,$w,$h,$style='') {
 	if($style=='F')	$op='f';
 	elseif($style=='FD' or $style=='DF') $op='B';
 	else $op='S';
-	$this->_out(sprintf('%.3f %.3f %.3f %.3f re %s',$x*$this->k,($this->h-$y)*$this->k,$w*$this->k,-$h*$this->k,$op));
+	$this->_out(sprintf('%.3f %.3f %.3f %.3f re %s',$x*MPDF_K,($this->h-$y)*MPDF_K,$w*MPDF_K,-$h*MPDF_K,$op));
 }
 
 function AddFont($family,$style='') {
@@ -3041,7 +3040,7 @@ function SetFont($family,$style='',$size=0, $write=true, $forcewrite=false) {
 		$this->FontFamily = $family;
 		$this->FontStyle = $style;
 		$this->FontSizePt = $size;
-		$this->FontSize = $size / $this->k;
+		$this->FontSize = $size / MPDF_K;
 		$this->CurrentFont = &$this->fonts[$fontkey];
 		if ($write) { 
 			$fontout = (sprintf('BT /F%d %.3f Tf ET', $this->CurrentFont['i'], $this->FontSizePt));
@@ -3104,7 +3103,7 @@ function SetFont($family,$style='',$size=0, $write=true, $forcewrite=false) {
 		$this->FontFamily=$family;
 		$this->FontStyle=$style;
 		$this->FontSizePt=$size;
-		$this->FontSize=$size/$this->k;
+		$this->FontSize=$size/MPDF_K;
 		$this->CurrentFont=&$this->fonts[$fontkey];
 		if ($write) { 
 			$fontout = (sprintf('BT /F%d %.3f Tf ET', $this->CurrentFont['i'], $this->FontSizePt));
@@ -3125,7 +3124,7 @@ function SetFontSize($size,$write=true) {
 	//Set font size in points
 	if($this->FontSizePt==$size) return;
 	$this->FontSizePt=$size;
-	$this->FontSize=$size/$this->k;
+	$this->FontSize=$size/MPDF_K;
 	$this->currentfontsize=$size;
 		if ($write) { 
 			$fontout = (sprintf('BT /F%d %.3f Tf ET', $this->CurrentFont['i'], $this->FontSizePt));
@@ -3150,7 +3149,7 @@ function SetLink($link,$y=0,$page=-1) {
 }
 
 function Link($x,$y,$w,$h,$link) {
-	$l = array($x*$this->k,$this->hPt-$y*$this->k,$w*$this->k,$h*$this->k,$link);	// mPDF 5.2.03
+	$l = array($x*MPDF_K,$this->hPt-$y*MPDF_K,$w*MPDF_K,$h*MPDF_K,$link);	// mPDF 5.2.03
 	if ($this->keep_block_together) {	// Save to array - don't write yet
 		$this->ktLinks[$this->page][]= $l;
 		return;
@@ -3185,7 +3184,7 @@ function Text($x,$y,$txt) {
 	$s = 'q ';
 	if ($this->falseBoldWeight && strpos($this->ReqFontStyle,"B") !== false && strpos($this->FontStyle,"B") === false) {
 		$s  .= '2 Tr 1 J 1 j ';
-		$s .= sprintf('%.3f w ',($this->FontSize/130)*$this->k*$this->falseBoldWeight);
+		$s .= sprintf('%.3f w ',($this->FontSize/130)*MPDF_K*$this->falseBoldWeight);
 		$tc = strtoupper($this->TextColor); // change 0 0 0 rg to 0 0 0 RG
 		if($this->FillColor!=$tc) { $s .= $tc.' '; }		// stroke (outline) = same colour as text(fill)
 	}
@@ -3200,7 +3199,7 @@ function Text($x,$y,$txt) {
 	if ($this->CurrentFont['type']=='TTF' && ($this->CurrentFont['sip'] || $this->CurrentFont['smp'])) {
 	      $txt2 = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$txt);
 		$txt2 = $this->UTF8toSubset($txt2);
-		$s.=sprintf('BT '.$aix.' %s Tj ET ',$x*$this->k,($this->h-$y)*$this->k,$txt2);
+		$s.=sprintf('BT '.$aix.' %s Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$txt2);
 	}
 	else if (!$this->onlyCoreFonts && !$this->usingCoreFont) {
 	      $txt2 = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$txt); 
@@ -3209,14 +3208,14 @@ function Text($x,$y,$txt) {
 		else {
 			//Convert string to UTF-16BE without BOM
 			$txt2= $this->UTF8ToUTF16BE($txt2, false);
-			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*$this->k,($this->h-$y)*$this->k,$this->_escape($txt2));
+			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$this->_escape($txt2));
 		}
 	}
 	else {
 	      $txt2 = str_replace($this->chrs[160],$this->chrs[32],$txt);
 		if ($this->kerning && $this->useKerning) { $s .= $this->_kern($txt2, '', $aix, $x, $y); }
 		else {
-			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*$this->k,($this->h-$y)*$this->k,$this->_escape($txt2));
+			$s.=sprintf('BT '.$aix.' (%s) Tj ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$this->_escape($txt2));
 		}
 	}
 	if($this->U and $txt!='') {
@@ -3333,7 +3332,7 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
 	      $txt = str_replace($this->chrs[194].$this->chrs[160],$this->chrs[32],$txt);
 	}
 
-	$k=$this->k;
+	$k=MPDF_K;
 	$oldcolumn = $this->CurrCol;
 	// Automatic page break
 	// Allows PAGE-BREAK-AFTER = avoid to work
@@ -3547,9 +3546,9 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
  			if (isset($this->CurrentFont['ut'])) { $ut=$this->CurrentFont['ut']/1000* $this->FontSize; }
 			else { $ut = 60/1000* $this->FontSize; }
 			$olw = $this->LineWidth;
-			$s.=' '.(sprintf(' %.3f w',$ut*$this->k));
+			$s.=' '.(sprintf(' %.3f w',$ut*MPDF_K));
 			$s.=' '.$this->_dounderline($this->x+$dx,$this->y+$baseline+$va+$adjusty,$txt);
-			$s.=' '.(sprintf(' %.3f w',$olw*$this->k));
+			$s.=' '.(sprintf(' %.3f w',$olw*MPDF_K));
 			if($this->FillColor!=$c) { $s.= ' '.$this->FillColor.' '; }
 		}
 
@@ -3564,7 +3563,7 @@ function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=0,$link='', $curre
  			if (isset($this->CurrentFont['ut'])) { $ut=$this->CurrentFont['ut']/1000* $this->FontSize; }
 			else { $ut = 60/1000* $this->FontSize; }
 			$olw = $this->LineWidth;
-			$s.=' '.(sprintf(' %.3f w',$ut*$this->k));
+			$s.=' '.(sprintf(' %.3f w',$ut*MPDF_K));
 			$s.=' '.$this->_dounderline($this->x+$dx,$this->y+$baseline+$va+$adjusty,$txt);
 			$s.=' '.(sprintf(' %.3f w',$olw));
 			if($this->FillColor!=$c) { $s.= ' '.$this->FillColor.' '; }
@@ -3608,7 +3607,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 		  //Convert string to UTF-16BE without BOM
 		  $space= $this->UTF8ToUTF16BE($space , false);
 		  $space=$this->_escape($space ); 
-		  $s = sprintf(' BT '.$aix,$x*$this->k,($this->h-$y)*$this->k);
+		  $s = sprintf(' BT '.$aix,$x*MPDF_K,($this->h-$y)*MPDF_K);
 		  $t = explode(' ',$txt);
 		  for($i=0;$i<count($t);$i++) {
 			$tx = $t[$i]; 
@@ -3648,7 +3647,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 		$tj .= $this->_escape($tx); 
 	}
 	$tj .= ')';
-	$s.=sprintf(' BT '.$aix.' [%s] TJ ET ',$x*$this->k,($this->h-$y)*$this->k,$tj);
+	$s.=sprintf(' BT '.$aix.' [%s] TJ ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$tj);
    }
    else {	// CORE Font
 	$s = '';
@@ -3662,7 +3661,7 @@ function _kern($txt, $mode, $aix, $x, $y) {
 		$tj .= $this->_escape($txt[$i]); 
 	}
 	$tj .= ')';
-	$s.=sprintf(' BT '.$aix.' [%s] TJ ET ',$x*$this->k,($this->h-$y)*$this->k,$tj);
+	$s.=sprintf(' BT '.$aix.' [%s] TJ ET ',$x*MPDF_K,($this->h-$y)*MPDF_K,$tj);
    }
 
    return $s;
@@ -3889,7 +3888,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='',$fill=0,$link='',$directionali
 						if (preg_match("/([".$this->pregRTLchars."])/u", $tmp)) { $inclCursive = true; }	// *RTL*
 						if (preg_match("/([".$this->pregHIchars.$this->pregBNchars.$this->pregPAchars."])/u", $tmp)) { $inclCursive = true; }	// *INDIC*
 					}
-					list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($wmax) - $len_ligne) * $this->k),$inclCursive);
+					list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($wmax) - $len_ligne) * MPDF_K),$inclCursive);
 					$this->SetSpacing($charspacing,$ws);
 					//////////////////////////////////////////
 				}
@@ -3962,7 +3961,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='',$fill=0,$link='',$directionali
 					$len_ligne = $this->GetStringWidth($tmp );
 					$nb_carac = strlen( $tmp ) ;  
 					$nb_spaces = substr_count( $tmp ,' ' ) ;  
-					list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($wmax) - $len_ligne) * $this->k),false);
+					list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($wmax) - $len_ligne) * MPDF_K),false);
 					$this->SetSpacing($charspacing,$ws);
 					//////////////////////////////////////////
 				}
@@ -4095,7 +4094,7 @@ function Write($h,$txt,$currentx=0,$link='',$directionality='ltr',$align='') {
 							if (preg_match("/([".$this->pregRTLchars."])/u", $tmp)) { $inclCursive = true; }	// *RTL*
 							if (preg_match("/([".$this->pregHIchars.$this->pregBNchars.$this->pregPAchars."])/u", $tmp)) { $inclCursive = true; }	// *INDIC*
 						}
-						list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($w-2) - $len_ligne) * $this->k),$inclCursive);
+						list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($w-2) - $len_ligne) * MPDF_K),$inclCursive);
 						$this->SetSpacing($charspacing,$ws);
 						//////////////////////////////////////////
 					}
@@ -4173,7 +4172,7 @@ function Write($h,$txt,$currentx=0,$link='',$directionality='ltr',$align='') {
 						$len_ligne = $this->GetStringWidth($tmp );
 						$nb_carac = strlen( $tmp ) ;  
 						$nb_spaces = substr_count( $tmp ,' ' ) ;  
-						list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($w-2) - $len_ligne) * $this->k),$false);
+						list($charspacing,$ws) = $this->GetJspacing($nb_carac,$nb_spaces,((($w-2) - $len_ligne) * MPDF_K),$false);
 						$this->SetSpacing($charspacing,$ws);
 						//////////////////////////////////////////
 					}
@@ -4412,7 +4411,7 @@ function newFlowingBlock( $w, $h, $a = '', $is_table = false, $is_list = false, 
 	if ($blockdir=='rtl') { $a = 'R'; }
 	else { $a = 'L'; }
    }
-   $this->flowingBlockAttr[ 'width' ] = ($w * $this->k);
+   $this->flowingBlockAttr[ 'width' ] = ($w * MPDF_K);
    // line height in user units
    $this->flowingBlockAttr[ 'is_table' ] = $is_table;
    $this->flowingBlockAttr[ 'is_list' ] = $is_list;
@@ -4464,7 +4463,7 @@ function finishFlowingBlock($endofblock=false, $next='') {
 			$strip = strlen($m[0]);
 			$content[count($content)-1] = substr($content[count($content)-1],0,(strlen($content[count($content)-1])-$strip));
 			$this->restoreFont( $font[ count($content)-1 ],false );
-			$contentWidth -= $this->GetStringWidth($m[0]) * $this->k;
+			$contentWidth -= $this->GetStringWidth($m[0]) * MPDF_K;
 		}
 
 	// the amount of space taken up so far in user units
@@ -4488,8 +4487,8 @@ function finishFlowingBlock($endofblock=false, $next='') {
 /*-- END TABLES --*/
 		$ipaddingL = $this->blk[$this->blklvl]['padding_left']; 
 		$ipaddingR = $this->blk[$this->blklvl]['padding_right']; 
-		$paddingL = ($ipaddingL * $this->k); 
-		$paddingR = ($ipaddingR * $this->k);
+		$paddingL = ($ipaddingL * MPDF_K); 
+		$paddingR = ($ipaddingR * MPDF_K);
 		$this->cMarginL =  $this->blk[$this->blklvl]['border_left']['w'];
 		$this->cMarginR =  $this->blk[$this->blklvl]['border_right']['w'];
 
@@ -4597,7 +4596,7 @@ function finishFlowingBlock($endofblock=false, $next='') {
 			$lastfontstyle=null;
 		}
 		if ($blockdir == 'ltr' && strpos($lastfontreqstyle,"I") !== false && strpos($lastfontstyle,"I") === false) {	// Artificial italic
-			$lastitalic = $this->FontSize*0.15*$this->k;
+			$lastitalic = $this->FontSize*0.15*MPDF_K;
 		}
 		else { $lastitalic = 0; }
 
@@ -4744,7 +4743,7 @@ function finishFlowingBlock($endofblock=false, $next='') {
 	$WidthCorrection = 0;
 	if (($newblock) && ($blockstate==1 || $blockstate==3) && isset($this->blk[$this->blklvl]['text_indent']) && ($lineCount == 0) && (!$is_table) && (!$is_list) && ($align != 'C')) { 
 		$ti = $this->ConvertSize($this->blk[$this->blklvl]['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
-		$WidthCorrection = ($ti*$this->k); 
+		$WidthCorrection = ($ti*MPDF_K); 
 	} 
 
 
@@ -4810,30 +4809,30 @@ function finishFlowingBlock($endofblock=false, $next='') {
 			(!$endofblock && $align=='J' && ($next=='image' || $next=='select' || $next=='input' || $next=='textarea' || ($next=='br' && $this->justifyB4br)))
 			) {
  		  // WORD SPACING
-			list($jcharspacing,$jws) = $this->GetJspacing($nb_carac,$nb_spaces,($maxWidth-$lastitalic-$contentWidth-$WidthCorrection-(($this->cMarginL+$this->cMarginR)*$this->k)-($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) )),$inclCursive);
+			list($jcharspacing,$jws) = $this->GetJspacing($nb_carac,$nb_spaces,($maxWidth-$lastitalic-$contentWidth-$WidthCorrection-(($this->cMarginL+$this->cMarginR)*MPDF_K)-($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) )),$inclCursive);
 		}
 		// Check if will fit at word/char spacing of previous line - if so continue it
 		// but only allow a maximum of $this->jSmaxWordLast and $this->jSmaxCharLast
-		else if ($contentWidth < ($maxWidth - $lastitalic-$WidthCorrection - (($this->cMarginL+$this->cMarginR)* $this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k))) && !$this->fixedlSpacing) {
+		else if ($contentWidth < ($maxWidth - $lastitalic-$WidthCorrection - (($this->cMarginL+$this->cMarginR)* MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K))) && !$this->fixedlSpacing) {
 			if ($this->ws > $this->jSmaxWordLast) {
 				$jws = $this->jSmaxWordLast;
 			}
 			if ($this->charspacing > $this->jSmaxCharLast) {
 				$jcharspacing = $this->jSmaxCharLast;
 			}
-			$check = $maxWidth - $lastitalic-$WidthCorrection - $contentWidth - (($this->cMarginL+$this->cMarginR)* $this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) ) - ( $jcharspacing * $nb_carac) - ( $jws * $nb_spaces);
+			$check = $maxWidth - $lastitalic-$WidthCorrection - $contentWidth - (($this->cMarginL+$this->cMarginR)* MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) ) - ( $jcharspacing * $nb_carac) - ( $jws * $nb_spaces);
 			if ($check <= 0) {
 				$jcharspacing = 0;
 				$jws = 0;
 			}
 		}
 
-		$empty = $maxWidth - $lastitalic-$WidthCorrection - $contentWidth - (($this->cMarginL+$this->cMarginR)* $this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) );
+		$empty = $maxWidth - $lastitalic-$WidthCorrection - $contentWidth - (($this->cMarginL+$this->cMarginR)* MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) );
 
 		$empty -= ($jcharspacing * $nb_carac);
 		$empty -= ($jws * $nb_spaces);
 
-		$empty /= $this->k;
+		$empty /= MPDF_K;
 
 		if (!$is_table) { 
 			$this->maxPosR = max($this->maxPosR , ($this->w - $this->rMargin - $this->blk[$this->blklvl]['outer_right_margin'] - $empty)); 
@@ -4919,7 +4918,7 @@ function finishFlowingBlock($endofblock=false, $next='') {
 			if ((($blockdir == 'rtl') && ($contains_rtl )) || $all_rtl ) { $this->restoreFont( $font[ $arraysize-1 - $k ] ); }
 			else { $this->restoreFont( $font[ $k ] ); }
 
-			$this->SetSpacing(($this->fixedlSpacing*$this->k)+$jcharspacing,($this->fixedlSpacing+$this->minwSpacing)*$this->k+$jws);
+			$this->SetSpacing(($this->fixedlSpacing*MPDF_K)+$jcharspacing,($this->fixedlSpacing+$this->minwSpacing)*$this->k+$jws);
 			$this->fixedlSpacing = false;
 			$this->minwSpacing = 0;
 
@@ -4930,8 +4929,8 @@ function finishFlowingBlock($endofblock=false, $next='') {
 				$save_fill = $fill; $spanfill = 1; $fill = 1;
 			}
 			// WORD SPACING
-		      $stringWidth = $this->GetStringWidth($chunk ) + ( $this->charspacing * mb_strlen($chunk,$this->mb_enc ) / $this->k )  
-				+ ( $this->ws * mb_substr_count($chunk,' ',$this->mb_enc ) / $this->k );
+		      $stringWidth = $this->GetStringWidth($chunk ) + ( $this->charspacing * mb_strlen($chunk,$this->mb_enc ) / MPDF_K )  
+				+ ( $this->ws * mb_substr_count($chunk,' ',$this->mb_enc ) / MPDF_K );
 			if (isset($this->objectbuffer[$dirk])) { 
 				if ($this->objectbuffer[$dirk]['type']=='dottab') { 
 					$this->objectbuffer[$dirk]['OUTER-WIDTH'] +=$empty; 
@@ -5138,10 +5137,10 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 			$rotate = 0;
 			$obiw = $objattr['INNER-WIDTH'];
 			$obih = $objattr['INNER-HEIGHT'];
-			$sx = $objattr['INNER-WIDTH']*$this->k / $objattr['orig_w'];
-			$sy = abs($objattr['INNER-HEIGHT'])*$this->k / abs($objattr['orig_h']);
-			$sx = ($objattr['INNER-WIDTH']*$this->k / $objattr['orig_w']);
-			$sy = ($objattr['INNER-HEIGHT']*$this->k / $objattr['orig_h']);
+			$sx = $objattr['INNER-WIDTH']*MPDF_K / $objattr['orig_w'];
+			$sy = abs($objattr['INNER-HEIGHT'])*MPDF_K / abs($objattr['orig_h']);
+			$sx = ($objattr['INNER-WIDTH']*MPDF_K / $objattr['orig_w']);
+			$sy = ($objattr['INNER-HEIGHT']*MPDF_K / $objattr['orig_h']);
 
 			if (isset($objattr['ROTATE'])) { $rotate = $objattr['ROTATE']; }
 			if ($rotate==90) { 
@@ -5150,8 +5149,8 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 				$obih = $objattr['INNER-WIDTH'];
 				$tr = $this->transformTranslate(0, -$objattr['INNER-WIDTH'], true) ;
 				$tr .= ' '. $this->transformRotate(90, $objattr['INNER-X'],($objattr['INNER-Y'] +$objattr['INNER-WIDTH'] ),true) ;
-				$sx = $obiw*$this->k / $objattr['orig_h'];
-				$sy = $obih*$this->k / $objattr['orig_w'];
+				$sx = $obiw*MPDF_K / $objattr['orig_h'];
+				$sy = $obih*MPDF_K / $objattr['orig_w'];
 			}
 			else if ($rotate==-90 || $rotate==270) { 
 				// AntiClockwise
@@ -5159,8 +5158,8 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 				$obih = $objattr['INNER-WIDTH'];
 				$tr = $this->transformTranslate($objattr['INNER-WIDTH'], ($objattr['INNER-HEIGHT']-$objattr['INNER-WIDTH']), true) ;
 				$tr .= ' '. $this->transformRotate(-90, $objattr['INNER-X'],($objattr['INNER-Y'] +$objattr['INNER-WIDTH'] ),true) ;
-				$sx = $obiw*$this->k / $objattr['orig_h'];
-				$sy = $obih*$this->k / $objattr['orig_w'];
+				$sx = $obiw*MPDF_K / $objattr['orig_h'];
+				$sy = $obih*MPDF_K / $objattr['orig_w'];
 			}
 			else if ($rotate==180) { 
 				// Mirror
@@ -5184,15 +5183,15 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 /*-- END BACKGROUNDS --*/
 /*-- IMAGES-WMF --*/
 			if (isset($objattr['itype']) && $objattr['itype']=='wmf') { 
-				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*$this->k-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*$this->k)+$sy*$objattr['wmf_y'], $objattr['ID']);
+				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*$this->k-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*MPDF_K)+$sy*$objattr['wmf_y'], $objattr['ID']);
 			}
 			else  
 /*-- END IMAGES-WMF --*/
 			if (isset($objattr['itype']) && $objattr['itype']=='svg') { 
-				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*$this->k-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*$this->k)+$sy*$objattr['wmf_y'], $objattr['ID']);
+				$outstring = sprintf('q '.$tr.'%.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, -$sy, $objattr['INNER-X']*$this->k-$sx*$objattr['wmf_x'], (($this->h-$objattr['INNER-Y'])*MPDF_K)+$sy*$objattr['wmf_y'], $objattr['ID']);
 			}
 			else { 
-				$outstring = sprintf("q ".$tr."%.3f 0 0 %.3f %.3f %.3f cm ".$gradmask."/I%d Do Q",$obiw*$this->k, $obih*$this->k, $objattr['INNER-X'] *$this->k, ($this->h-($objattr['INNER-Y'] +$obih ))*$this->k,$objattr['ID'] );
+				$outstring = sprintf("q ".$tr."%.3f 0 0 %.3f %.3f %.3f cm ".$gradmask."/I%d Do Q",$obiw*MPDF_K, $obih*MPDF_K, $objattr['INNER-X'] *MPDF_K, ($this->h-($objattr['INNER-Y'] +$obih ))*MPDF_K,$objattr['ID'] );
 			}
 			$this->_out($outstring);
 			// LINK
@@ -5451,7 +5450,7 @@ function printobjectbuffer($is_table=false, $blockdir=false) {
 		     }
 		     else {
 			$this->y = $objattr['INNER-Y'];
-			$this->_out( sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$objattr['INNER-WIDTH'] *$this->k,$objattr['INNER-HEIGHT'] *$this->k,$objattr['INNER-X'] *$this->k,($this->h-($objattr['INNER-Y'] +$objattr['INNER-HEIGHT'] ))*$this->k,$objattr['ID'] ) );
+			$this->_out( sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$objattr['INNER-WIDTH'] *MPDF_K,$objattr['INNER-HEIGHT'] *MPDF_K,$objattr['INNER-X'] *MPDF_K,($this->h-($objattr['INNER-Y'] +$objattr['INNER-HEIGHT'] ))*MPDF_K,$objattr['ID'] ) );
 			if (isset($objattr['BORDER-WIDTH']) && $objattr['BORDER-WIDTH']) { $this->PaintImgBorder($objattr,$is_table); }
 		     }
 		   }
@@ -5669,8 +5668,8 @@ function WriteFlowingBlock( $s)
 /*-- END TABLES --*/
 		$ipaddingL = $this->blk[$this->blklvl]['padding_left']; 
 		$ipaddingR = $this->blk[$this->blklvl]['padding_right']; 
-		$paddingL = ($ipaddingL * $this->k); 
-		$paddingR = ($ipaddingR * $this->k); 
+		$paddingL = ($ipaddingL * MPDF_K); 
+		$paddingR = ($ipaddingR * MPDF_K); 
 		$this->cMarginL =  $this->blk[$this->blklvl]['border_left']['w'];
 		$cpaddingadjustL = -$this->cMarginL;
 		$this->cMarginR =  $this->blk[$this->blklvl]['border_right']['w'];
@@ -5702,20 +5701,20 @@ function WriteFlowingBlock( $s)
 		$objattr = $this->_getObjAttr($s);
 		$h_corr = 0; 
 		if ($is_table) {	// *TABLES*
-			$maximumW = ($maxWidth/$this->k) - ($this->cellPaddingL + $this->cMarginL + $this->cellPaddingR + $this->cMarginR); 	// *TABLES*
+			$maximumW = ($maxWidth/MPDF_K) - ($this->cellPaddingL + $this->cMarginL + $this->cellPaddingR + $this->cMarginR); 	// *TABLES*
 		}	// *TABLES*
 		else {	// *TABLES*
 			if (($newblock) && ($blockstate==1 || $blockstate==3) && ($lineCount == 0) && (!$is_table)) { $h_corr = $this->blk[$this->blklvl]['padding_top'] + $this->blk[$this->blklvl]['border_top']['w']; }
-			$maximumW = ($maxWidth/$this->k) - ($this->blk[$this->blklvl]['padding_left'] + $this->blk[$this->blklvl]['border_left']['w'] + $this->blk[$this->blklvl]['padding_right'] + $this->blk[$this->blklvl]['border_right']['w'] + $fpaddingL + $fpaddingR ); 
+			$maximumW = ($maxWidth/MPDF_K) - ($this->blk[$this->blklvl]['padding_left'] + $this->blk[$this->blklvl]['border_left']['w'] + $this->blk[$this->blklvl]['padding_right'] + $this->blk[$this->blklvl]['border_right']['w'] + $fpaddingL + $fpaddingR ); 
 		}	// *TABLES*
-		$objattr = $this->inlineObject($objattr['type'],$this->lMargin + $fpaddingL + ($contentWidth/$this->k),($this->y + $h_corr), $objattr, $this->lMargin,($contentWidth/$this->k),$maximumW,$lineHeight,true,$is_table);
+		$objattr = $this->inlineObject($objattr['type'],$this->lMargin + $fpaddingL + ($contentWidth/MPDF_K),($this->y + $h_corr), $objattr, $this->lMargin,($contentWidth/MPDF_K),$maximumW,$lineHeight,true,$is_table);
 
 		// SET LINEHEIGHT for this line ================ RESET AT END
 		$lineHeight = MAX($lineHeight,$objattr['OUTER-HEIGHT']);
 		$this->objectbuffer[count($content)-1] = $objattr;
 		// if (isset($objattr['vertical-align'])) { $valign = $objattr['vertical-align']; }
 		// else { $valign = ''; }
-		$contentWidth += ($objattr['OUTER-WIDTH'] * $this->k);
+		$contentWidth += ($objattr['OUTER-WIDTH'] * MPDF_K);
 		return;
 	}
 
@@ -5739,7 +5738,7 @@ function WriteFlowingBlock( $s)
 		// Soft Hyphens chr(173)
 		if ($c == chr(173) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) { $cw = 0;  }
 		else { 
-			$cw = ($this->GetStringWidth($c) * $this->k);	// (so adjust for letter/word spacing)
+			$cw = ($this->GetStringWidth($c) * MPDF_K);	// (so adjust for letter/word spacing)
 			if ($this->kerning && $this->useKerning && $i > 0) {
 				if (isset($this->CurrentFont['kerninfo'][$s[($i-1)]][$c])) { 
 					$cw += ($this->CurrentFont['kerninfo'][$s[($i-1)]][$c] * $this->FontSizePt / 1000 );
@@ -5749,7 +5748,7 @@ function WriteFlowingBlock( $s)
 	}
 	else {
 	      $c = mb_substr($s,$i,1,$this->mb_enc );
-		$cw = ($this->GetStringWidth($c) * $this->k);
+		$cw = ($this->GetStringWidth($c) * MPDF_K);
 		if ($this->kerning && $this->useKerning && $i > 0) {
 	     		$lastc = mb_substr($s,($i-1),1,$this->mb_enc );
 			$ulastc = $this->UTF8StringToArray($lastc, false);
@@ -5786,7 +5785,7 @@ function WriteFlowingBlock( $s)
 	$WidthCorrection = 0; 
 	if (($newblock) && ($blockstate==1 || $blockstate==3) && isset($this->blk[$this->blklvl]['text_indent']) && ($lineCount == 0) && (!$is_table) && (!$is_list) && ($align != 'C')) { 
 		$ti = $this->ConvertSize($this->blk[$this->blklvl]['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
-		$WidthCorrection = ($ti*$this->k); 
+		$WidthCorrection = ($ti*MPDF_K); 
 	} 
 
 	// Added mPDF 3.0 Float DIV
@@ -5814,7 +5813,7 @@ function WriteFlowingBlock( $s)
 
 
        // try adding another char
-	if (( $contentWidth + $cw > $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*$this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) ) +  0.001))  {// 0.001 is to correct for deviations converting mm=>pts
+	if (( $contentWidth + $cw > $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) ) +  0.001))  {// 0.001 is to correct for deviations converting mm=>pts
 		// it won't fit, output what we already have
 		$lineCount++;
 
@@ -5832,8 +5831,8 @@ function WriteFlowingBlock( $s)
 /*-- HYPHENATION --*/
 		// Soft Hyphens chr(173)
 		if ((!$this->usingCoreFont && preg_match("/\xc2\xad/",$currWord)) || ($this->usingCoreFont && preg_match("/".chr(173)."/",$currWord) && ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats')) ) {
-			$rem = $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*$this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) );
-			list($success,$pre,$post,$prelength) = $this->softHyphenate($currWord, (($rem-$cutoffWidth)/$this->k -$this->GetStringWidth(" ")) );
+			$rem = $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) );
+			list($success,$pre,$post,$prelength) = $this->softHyphenate($currWord, (($rem-$cutoffWidth)/MPDF_K -$this->GetStringWidth(" ")) );
 		}
 
 		if (!$success && ($this->hyphenate || ($this->hyphenateTables && $is_table))) { 
@@ -5843,8 +5842,8 @@ function WriteFlowingBlock( $s)
 				if ($addc == ' ') { break; }
 				$currWord .= $addc;
 			}
-			$rem = $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*$this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) );
-			list($success,$pre,$post,$prelength) = $this->hyphenateWord($currWord, (($rem-$cutoffWidth)/$this->k -$this->GetStringWidth(" ")) );
+			$rem = $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) );
+			list($success,$pre,$post,$prelength) = $this->hyphenateWord($currWord, (($rem-$cutoffWidth)/MPDF_K -$this->GetStringWidth(" ")) );
 		}
 		if ($success) { 
 			$already = array_pop( $words );
@@ -5954,7 +5953,7 @@ function WriteFlowingBlock( $s)
 
 		if (isset($this->objectbuffer[(count($content)-1)]) && $this->objectbuffer[(count($content)-1)]['type']=='dottab') {
 			$savedObj = array_pop( $this->objectbuffer );
-			$contentWidth -= ($this->objectbuffer[(count($content)-1)]['OUTER-WIDTH'] * $this->k);
+			$contentWidth -= ($this->objectbuffer[(count($content)-1)]['OUTER-WIDTH'] * MPDF_K);
 		}
 
 		// Set Current lineheight (correction factor)
@@ -6021,7 +6020,7 @@ function WriteFlowingBlock( $s)
 			else if ($this->FontFamily!='csymbol' && $this->FontFamily!='czapfdingbats') {
 			      $content[$k] = $chunk = str_replace($this->chrs[173],'',$chunk );
 			}
-			$contentWidth += $this->GetStringWidth( $chunk ) * $this->k; 
+			$contentWidth += $this->GetStringWidth( $chunk ) * MPDF_K; 
 			if (!$lhfixed) { $maxlineHeight = max($maxlineHeight,$this->FontSize * $this->lineheight_correction ); }
 			if ($lhfixed && ($this->FontSize > $def_fontsize || ($this->FontSize > ($lineHeight * $this->lineheight_correction) && $is_list))) { 
 				$this->forceExactLineheight = false; 
@@ -6033,7 +6032,7 @@ function WriteFlowingBlock( $s)
 		$lastfontreqstyle = $font[count($font)-1]['ReqFontStyle'];
 		$lastfontstyle = $font[count($font)-1]['style'];
 		if ($blockdir == 'ltr' && strpos($lastfontreqstyle,"I") !== false && strpos($lastfontstyle,"I") === false) {	// Artificial italic
-			$lastitalic = $this->FontSize*0.15*$this->k;
+			$lastitalic = $this->FontSize*0.15*MPDF_K;
 		}
 		else { $lastitalic = 0; }
 
@@ -6056,7 +6055,7 @@ function WriteFlowingBlock( $s)
 
 		foreach ( $content as $k => $chunk ) {
 		  if (isset($this->objectbuffer[$k]) && $this->objectbuffer[$k]) { 
-			$contentWidth += $this->objectbuffer[$k]['OUTER-WIDTH'] * $this->k; 
+			$contentWidth += $this->objectbuffer[$k]['OUTER-WIDTH'] * MPDF_K; 
 			$oh = $this->objectbuffer[$k]['OUTER-HEIGHT'];
 			$va = $this->objectbuffer[$k]['vertical-align']; // = $objattr['vertical-align'] = set as M,T,B,S
 			if ($lhfixed && $oh > $def_fontsize) { $this->forceExactLineheight = false; }
@@ -6130,7 +6129,7 @@ function WriteFlowingBlock( $s)
 		$nb_spaces = 0;
 		// if it's justified, we need to find the char/word spacing (or if orphans have allowed length of line to go over the maxwidth)
 		// mPDF 5.1.009
-		if(( $align == 'J' ) || (($cutoffWidth + $lastitalic > $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*$this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) ) +  0.001) && !$CJKoverflow)) {   // 0.001 is to correct for deviations converting mm=>pts
+		if(( $align == 'J' ) || (($cutoffWidth + $lastitalic > $maxWidth - $WidthCorrection - (($this->cMarginL+$this->cMarginR)*MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) ) +  0.001) && !$CJKoverflow)) {   // 0.001 is to correct for deviations converting mm=>pts
 		  // JUSTIFY J (Use character spacing)
  		  // WORD SPACING
 			foreach ( $content as $k => $chunk ) {
@@ -6139,18 +6138,18 @@ function WriteFlowingBlock( $s)
 					$nb_spaces += mb_substr_count( $chunk,' ', $this->mb_enc ) ;  
 				}
 			}
-			list($jcharspacing,$jws) = $this->GetJspacing($nb_carac,$nb_spaces,($maxWidth-$lastitalic-$cutoffWidth-$WidthCorrection-(($this->cMarginL+$this->cMarginR)*$this->k)-($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) )),$inclCursive);
+			list($jcharspacing,$jws) = $this->GetJspacing($nb_carac,$nb_spaces,($maxWidth-$lastitalic-$cutoffWidth-$WidthCorrection-(($this->cMarginL+$this->cMarginR)*MPDF_K)-($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) )),$inclCursive);
 		}
 
 
 		// WORD SPACING
-		$empty = $maxWidth - $lastitalic-$WidthCorrection - $contentWidth - (($this->cMarginL+$this->cMarginR)* $this->k) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * $this->k) );
+		$empty = $maxWidth - $lastitalic-$WidthCorrection - $contentWidth - (($this->cMarginL+$this->cMarginR)* MPDF_K) - ($paddingL+$paddingR +(($fpaddingL + $fpaddingR) * MPDF_K) );
 
 		$empty -= ($jcharspacing * $nb_carac);
 		$empty -= ($jws * $nb_spaces);
 
 
-		$empty /= $this->k;
+		$empty /= MPDF_K;
 		$b = ''; //do not use borders
 		// Get PAGEBREAK TO TEST for height including the top border/padding
 		$check_h = max($this->divheight,$lineHeight);
@@ -6296,7 +6295,7 @@ function WriteFlowingBlock( $s)
 			if ((($blockdir == 'rtl') && ($contains_rtl )) || ($all_rtl )) { $this->restoreFont($font[$arraysize-1 - $k]); }
 			else { $this->restoreFont( $font[ $k ] ); }
 
-			$this->SetSpacing(($this->fixedlSpacing*$this->k)+$jcharspacing,($this->fixedlSpacing+$this->minwSpacing)*$this->k+$jws);
+			$this->SetSpacing(($this->fixedlSpacing*MPDF_K)+$jcharspacing,($this->fixedlSpacing+$this->minwSpacing)*$this->k+$jws);
 			// Now unset these values so they don't influence GetStringwidth below or in fn. Cell
 			$this->fixedlSpacing = false;
 			$this->minwSpacing = 0;
@@ -6310,13 +6309,13 @@ function WriteFlowingBlock( $s)
 
 			// WORD SPACING
 		      $stringWidth = $this->GetStringWidth($chunk );
-			$stringWidth += ( $this->charspacing * mb_strlen($chunk,$this->mb_enc ) / $this->k );
-			$stringWidth += ( $this->ws * mb_substr_count($chunk,' ',$this->mb_enc ) / $this->k );
+			$stringWidth += ( $this->charspacing * mb_strlen($chunk,$this->mb_enc ) / MPDF_K );
+			$stringWidth += ( $this->ws * mb_substr_count($chunk,' ',$this->mb_enc ) / MPDF_K );
 			if (isset($this->objectbuffer[$dirk])) { $stringWidth = $this->objectbuffer[$dirk]['OUTER-WIDTH'];  }
 
 			if ($stringWidth==0) { $stringWidth = 0.000001; }
 			if ($k == $arraysize-1) {
-				$stringWidth -= ( $this->charspacing / $this->k ); 
+				$stringWidth -= ( $this->charspacing / MPDF_K ); 
 				$this->Cell( $stringWidth, $lineHeight, $chunk, '', 1, '', $fill, $this->HREF , $currentx,0,0,'M', $fill, $af, $bf ); //mono-style line or last part (skips line)
 			}
 			else $this->Cell( $stringWidth, $lineHeight, $chunk, '', 0, '', $fill, $this->HREF, 0, 0,0,'M', $fill, $af, $bf );//first or middle part
@@ -6393,7 +6392,7 @@ function WriteFlowingBlock( $s)
 			$this->objectbuffer[] = $savedObj;
 			$font[] = $savedFont;
 			$content[] = '';
-			$contentWidth += $savedObj['OUTER-WIDTH'] * $this->k;
+			$contentWidth += $savedObj['OUTER-WIDTH'] * MPDF_K;
 		}
 		$font[] = $savedFont;
 		$content[] = $savedContent . $c;
@@ -6401,7 +6400,7 @@ function WriteFlowingBlock( $s)
 		// CJK - strip CJK space at end of line
 		// &#x3000; = \xe3\x80\x80 = CJK space
 		if ($this->checkCJK && $currContent == "\xe3\x80\x80") { $currContent = '' ; }	// *CJK-FONTS*
-		$contentWidth += $this->GetStringWidth( $currContent ) * $this->k;
+		$contentWidth += $this->GetStringWidth( $currContent ) * MPDF_K;
 		$cutoffWidth = $contentWidth;
 		$CJKoverflow = false; 	// mPDF 5.1.009
       }
@@ -6588,21 +6587,21 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='',$paint=true, $constrain=t
 			// WMF units are twips (1/20pt)
 			// divide by 20 to get points
 			// divide by k to get user units
-			$w = abs($info['w'])/(20*$this->k);
-			$h = abs($info['h']) / (20*$this->k);
+			$w = abs($info['w'])/(20*MPDF_K);
+			$h = abs($info['h']) / (20*MPDF_K);
 		}
 		else 
 /*-- END IMAGES-WMF --*/
            if ($info['type']=='svg') { 
 			// returned SVG units are pts
 			// divide by k to get user units (mm)
-			$w = abs($info['w'])/$this->k;
-			$h = abs($info['h']) /$this->k;
+			$w = abs($info['w'])/MPDF_K;
+			$h = abs($info['h']) /MPDF_K;
 		}
 		else {
 			//Put image at default image dpi
-			$w=($info['w']/$this->k) * (72/$this->img_dpi);
-			$h=($info['h']/$this->k) * (72/$this->img_dpi);
+			$w=($info['w']/MPDF_K) * (72/$this->img_dpi);
+			$h=($info['h']/MPDF_K) * (72/$this->img_dpi);
 		}
 	}
 	if($w==0)	$w=abs($h*$info['w']/$info['h']); 
@@ -6674,19 +6673,19 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='',$paint=true, $constrain=t
 	  }
 /*-- IMAGES-WMF --*/
 	  if ($info['type']=='wmf') { 
-		$sx = $w*$this->k / $info['w'];
-		$sy = -$h*$this->k / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*$this->k)-$sy*$info['y'], $info['i']);
+		$sx = $w*MPDF_K / $info['w'];
+		$sy = -$h*MPDF_K / $info['h'];
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	  }
 	  else  
 /*-- END IMAGES-WMF --*/
 	  if ($info['type']=='svg') { 
-		$sx = $w*$this->k / $info['w'];
-		$sy = -$h*$this->k / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*$this->k)-$sy*$info['y'], $info['i']);
+		$sx = $w*MPDF_K / $info['w'];
+		$sy = -$h*MPDF_K / $info['h'];
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	  }
 	  else { 
-		$outstring = sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$w*$this->k,$h*$this->k,$x*$this->k,($this->h-($y+$h))*$this->k,$info['i']);
+		$outstring = sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$w*MPDF_K,$h*MPDF_K,$x*MPDF_K,($this->h-($y+$h))*MPDF_K,$info['i']);
 	  }
 
 	  if ($this->watermarkImgBehind) { 
@@ -6744,19 +6743,19 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='',$paint=true, $constrain=t
 
 /*-- IMAGES-WMF --*/
 	if ($info['type']=='wmf') { 
-		$sx = $w*$this->k / $info['w'];
-		$sy = -$h*$this->k / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*$this->k)-$sy*$info['y'], $info['i']);
+		$sx = $w*MPDF_K / $info['w'];
+		$sy = -$h*MPDF_K / $info['h'];
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	}
 	else  
 /*-- END IMAGES-WMF --*/
 	if ($info['type']=='svg') { 
-		$sx = $w*$this->k / $info['w'];
-		$sy = -$h*$this->k / $info['h'];
-		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*$this->k)-$sy*$info['y'], $info['i']);
+		$sx = $w*MPDF_K / $info['w'];
+		$sy = -$h*MPDF_K / $info['h'];
+		$outstring = sprintf('q %.3f 0 0 %.3f %.3f %.3f cm /FO%d Do Q', $sx, $sy, $x*$this->k-$sx*$info['x'], (($this->h-$y)*MPDF_K)-$sy*$info['y'], $info['i']);
 	}
 	else { 
-		$outstring = sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$w*$this->k,$h*$this->k,$x*$this->k,($this->h-($y+$h))*$this->k,$info['i']);
+		$outstring = sprintf("q %.3f 0 0 %.3f %.3f %.3f cm /I%d Do Q",$w*MPDF_K,$h*MPDF_K,$x*MPDF_K,($this->h-($y+$h))*MPDF_K,$info['i']);
 	}
 
 	if($paint) {
@@ -6993,7 +6992,7 @@ function SetLineCap($mode=2) {
 
 function SetDash($black=false,$white=false)
 {
-        if($black and $white) $s=sprintf('[%.3f %.3f] 0 d',$black*$this->k,$white*$this->k);
+        if($black and $white) $s=sprintf('[%.3f %.3f] 0 d',$black*MPDF_K,$white*MPDF_K);
         else $s='[] 0 d';
 	if($this->page>0 && ((isset($this->pageoutput[$this->page]['Dash']) && $this->pageoutput[$this->page]['Dash'] != $s) || !isset($this->pageoutput[$this->page]['Dash']) || $this->keep_block_together)) { $this->_out($s); }
 	$this->pageoutput[$this->page]['Dash'] = $s;
@@ -7359,7 +7358,7 @@ function _puthtmlheaders() {
 		$this->headerbuffer = $s . $this->headerbuffer;
 		$os = '';
 		if ($rotate) {
-			$os .= sprintf('q 0 -1 1 0 0 %.3f cm ',($this->w*$this->k));
+			$os .= sprintf('q 0 -1 1 0 0 %.3f cm ',($this->w*MPDF_K));
 		}
 		$os .= $this->headerbuffer ;
 		if ($rotate) {
@@ -7377,12 +7376,12 @@ function _puthtmlheaders() {
 				$lh = $lk[3];
 				$lk[2] = $lh;
 				$lk[3] = $lw;	// swap width and height
-				$ax = $lk[0]/$this->k;
-				$ay = $lk[1]/$this->k;
-				$bx = $ay-($lh/$this->k);
+				$ax = $lk[0]/MPDF_K;
+				$ay = $lk[1]/MPDF_K;
+				$bx = $ay-($lh/MPDF_K);
 				$by = $this->w-$ax;
-				$lk[0] = $bx*$this->k;
-				$lk[1] = ($this->h-$by)*$this->k - $lw;
+				$lk[0] = $bx*MPDF_K;
+				$lk[1] = ($this->h-$by)*MPDF_K - $lw;
 			}
 			$this->PageLinks[$n][]=$lk;
 		}
@@ -7443,7 +7442,7 @@ function _puthtmlheaders() {
 		$os = '';
 		$os .= $this->StartTransform(true)."\n";
 		if ($rotate) {
-			$os .= sprintf('q 0 -1 1 0 0 %.3f cm ',($this->w*$this->k));
+			$os .= sprintf('q 0 -1 1 0 0 %.3f cm ',($this->w*MPDF_K));
 		}
 		$os .= $this->transformTranslate(0, $adj, true)."\n";
 		$os .= $this->headerbuffer ;
@@ -7457,19 +7456,19 @@ function _puthtmlheaders() {
 
 		$lks = $this->HTMLheaderPageLinks; 
 		foreach($lks AS $lk) {
-			$lk[1] -= $adj*$this->k;
+			$lk[1] -= $adj*MPDF_K;
 			if ($rotate) {
 				$lw = $lk[2];
 				$lh = $lk[3];
 				$lk[2] = $lh;
 				$lk[3] = $lw;	// swap width and height
 
-				$ax = $lk[0]/$this->k;
-				$ay = $lk[1]/$this->k;
-				$bx = $ay-($lh/$this->k);
+				$ax = $lk[0]/MPDF_K;
+				$ay = $lk[1]/MPDF_K;
+				$bx = $ay-($lh/MPDF_K);
 				$by = $this->w-$ax;
-				$lk[0] = $bx*$this->k;
-				$lk[1] = ($this->h-$by)*$this->k - $lw;
+				$lk[0] = $bx*MPDF_K;
+				$lk[1] = ($this->h-$by)*MPDF_K - $lw;
 			}
 			$this->PageLinks[$n][]=$lk;
 		}
@@ -7561,16 +7560,16 @@ function _putpages()
 	for($n=1;$n<=$nb;$n++)
 	{
 		if(isset($this->OrientationChanges[$n])) { 
-			$hPt=$this->pageDim[$n]['w']*$this->k;
-			$wPt=$this->pageDim[$n]['h']*$this->k;
-			$owidthPt_LR = $this->pageDim[$n]['outer_width_TB']*$this->k;
-			$owidthPt_TB = $this->pageDim[$n]['outer_width_LR']*$this->k;
+			$hPt=$this->pageDim[$n]['w']*MPDF_K;
+			$wPt=$this->pageDim[$n]['h']*MPDF_K;
+			$owidthPt_LR = $this->pageDim[$n]['outer_width_TB']*MPDF_K;
+			$owidthPt_TB = $this->pageDim[$n]['outer_width_LR']*MPDF_K;
 		}
 		else { 
-			$wPt=$this->pageDim[$n]['w']*$this->k;
-			$hPt=$this->pageDim[$n]['h']*$this->k;
-			$owidthPt_LR = $this->pageDim[$n]['outer_width_LR']*$this->k;
-			$owidthPt_TB = $this->pageDim[$n]['outer_width_TB']*$this->k;
+			$wPt=$this->pageDim[$n]['w']*MPDF_K;
+			$hPt=$this->pageDim[$n]['h']*MPDF_K;
+			$owidthPt_LR = $this->pageDim[$n]['outer_width_LR']*MPDF_K;
+			$owidthPt_TB = $this->pageDim[$n]['outer_width_TB']*MPDF_K;
 		}
 		//Replace number of pages
 		if(!empty($this->aliasNbPg)) {
@@ -7589,7 +7588,7 @@ function _putpages()
 					$x2 = $this->GetStringWidth($nb);
 					$xadj = $x1 - $x2;
 					if ($pos=='C') { $xadj /= 2; }
-					$rep = sprintf(' q 1 0 0 1 %.3f 0 cm ', $xadj*$this->k); 
+					$rep = sprintf(' q 1 0 0 1 %.3f 0 cm ', $xadj*MPDF_K); 
 					$this->pages[$n] = str_replace($m[0][$hi], $rep, $this->pages[$n]);
 				}
 			}
@@ -7622,7 +7621,7 @@ function _putpages()
 					$x2 = $this->GetStringWidth($nbt);
 					$xadj = $x1 - $x2;
 					if ($pos=='C') { $xadj /= 2; }
-					$rep = sprintf(' q 1 0 0 1 %.3f 0 cm ', $xadj*$this->k); 
+					$rep = sprintf(' q 1 0 0 1 %.3f 0 cm ', $xadj*MPDF_K); 
 					$this->pages[$n] = str_replace($m[0][$hi], $rep, $this->pages[$n]);
 				}
 			}
@@ -7649,7 +7648,7 @@ function _putpages()
 		if(isset($this->OrientationChanges[$n])) {
 			$this->_out(sprintf('/MediaBox [0 0 %.3f %.3f]',$hPt,$wPt));
 			//If BleedBox is defined, it must be larger than the TrimBox, but smaller than the MediaBox
-			$bleedMargin = $this->pageDim[$n]['bleedMargin']*$this->k;
+			$bleedMargin = $this->pageDim[$n]['bleedMargin']*MPDF_K;
 			if ($bleedMargin && ($owidthPt_TB || $owidthPt_LR)) {
 				$x0 = $owidthPt_TB-$bleedMargin;
 				$y0 = $owidthPt_LR-$bleedMargin;
@@ -7666,7 +7665,7 @@ function _putpages()
 		//else if($wPt != $defwPt || $hPt != $defhPt) {
 		else {
 			$this->_out(sprintf('/MediaBox [0 0 %.3f %.3f]',$wPt,$hPt));
-			$bleedMargin = $this->pageDim[$n]['bleedMargin']*$this->k;
+			$bleedMargin = $this->pageDim[$n]['bleedMargin']*MPDF_K;
 			if ($bleedMargin && ($owidthPt_TB || $owidthPt_LR)) {
 				$x0 = $owidthPt_LR-$bleedMargin;
 				$y0 = $owidthPt_TB-$bleedMargin;
@@ -7786,8 +7785,8 @@ function _putannots($n) {
 	{
 		$annotobjs = array();
 		if(isset($this->PageLinks[$n]) || isset($this->PageAnnots[$n]) || count($this->forms) > 0 ) {	// mPDF 5.2.03
-			$wPt=$this->pageDim[$n]['w']*$this->k;
-			$hPt=$this->pageDim[$n]['h']*$this->k;
+			$wPt=$this->pageDim[$n]['w']*MPDF_K;
+			$hPt=$this->pageDim[$n]['h']*MPDF_K;
 
 			//Links
 			if(isset($this->PageLinks[$n])) {
@@ -7804,7 +7803,7 @@ function _putannots($n) {
 				if (strpos($pl[4],'@')===0) {
 					$p=substr($pl[4],1);
 					//	$h=isset($this->OrientationChanges[$p]) ? $wPt : $hPt;
-					$htarg=$this->pageDim[$p]['h']*$this->k;
+					$htarg=$this->pageDim[$p]['h']*MPDF_K;
 					$annot.=sprintf(' /Dest [%d 0 R /XYZ 0 %.3f null]>>',1+2*$p,$htarg);
 				}
 				else if(is_string($pl[4])) {
@@ -7813,9 +7812,9 @@ function _putannots($n) {
 				else {
 					$l=$this->links[$pl[4]];
 					// may not be set if #link points to non-existent target
-					if (isset($this->pageDim[$l[0]]['h'])) { $htarg=$this->pageDim[$l[0]]['h']*$this->k; }
-					else { $htarg=$this->h*$this->k; } // doesn't really matter
-					$annot.=sprintf(' /Dest [%d 0 R /XYZ 0 %.3f null]>>',1+2*$l[0],$htarg-$l[1]*$this->k);
+					if (isset($this->pageDim[$l[0]]['h'])) { $htarg=$this->pageDim[$l[0]]['h']*MPDF_K; }
+					else { $htarg=$this->h*MPDF_K; } // doesn't really matter
+					$annot.=sprintf(' /Dest [%d 0 R /XYZ 0 %.3f null]>>',1+2*$l[0],$htarg-$l[1]*MPDF_K);
 				}
 				$this->_out($annot);
 				$this->_out('endobj');
@@ -7833,11 +7832,11 @@ function _putannots($n) {
 				$pl['opt'] = array_change_key_case($pl['opt'], CASE_LOWER);
 				$x = $pl['x']; 
 				if ($this->annotMargin <> 0 || $x==0 || $x<0) {	// Odd page
-				   $x = ($wPt/$this->k) - $this->annotMargin;
+				   $x = ($wPt/MPDF_K) - $this->annotMargin;
 				}
 				$w = $h = 0;
-				$a = $x * $this->k;
-				$b = $hPt - ($pl['y']  * $this->k);
+				$a = $x * MPDF_K;
+				$b = $hPt - ($pl['y']  * MPDF_K);
 				$annot .= '<</Type /Annot ';
 				if ($FileAttachment) { 
 					$annot .= '/Subtype /FileAttachment'; 
@@ -7926,13 +7925,13 @@ function _putannots($n) {
 				else if (!empty($pl['opt']['popup'])) { 
 					$this->_newobj();
 					$annot='';
-					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][0])) { $x = $pl['opt']['popup'][0] * $this->k; }
-					else { $x = $pl['x'] * $this->k; }
-					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][1])) { $y = $hPt - ($pl['opt']['popup'][1] * $this->k); }
-					else { $y = $hPt - ($pl['y']  * $this->k); }
-					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][2])) { $w = $pl['opt']['popup'][2] * $this->k; }
+					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][0])) { $x = $pl['opt']['popup'][0] * MPDF_K; }
+					else { $x = $pl['x'] * MPDF_K; }
+					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][1])) { $y = $hPt - ($pl['opt']['popup'][1] * MPDF_K); }
+					else { $y = $hPt - ($pl['y']  * MPDF_K); }
+					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][2])) { $w = $pl['opt']['popup'][2] * MPDF_K; }
 					else { $w = 180; }
-					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][3])) { $h = $pl['opt']['popup'][3] * $this->k; }
+					if (is_array($pl['opt']['popup']) && isset($pl['opt']['popup'][3])) { $h = $pl['opt']['popup'][3] * MPDF_K; }
 					else { $h = 120; }
 					$rect = sprintf('%.3f %.3f %.3f %.3f', $x, $y-$h, $x+$w, $y);
 					$annot .= '<</Type /Annot /Subtype /Popup /Rect ['.$rect.']';
@@ -9393,11 +9392,11 @@ function _getHFHeight(&$det,$end) {
 		  if (isset($det[$pos]['content']) && $det[$pos]['content']) {
 			if (isset($det[$pos]['font-size']) && $det[$pos]['font-size']) { $hfsz = $det[$pos]['font-size']; }
 			else { $hfsz = $this->default_font_size; }
-			$h = max($h,$hfsz/$this->k);
+			$h = max($h,$hfsz/MPDF_K);
 		  }
 		}
-		if ($det['line'] && $end=='H') { $h += $h/$this->k*$this->header_line_spacing; }
-		else if ($det['line'] && $end=='F') { $h += $h/$this->k*$this->footer_line_spacing; }
+		if ($det['line'] && $end=='H') { $h += $h/MPDF_K*$this->header_line_spacing; }
+		else if ($det['line'] && $end=='F') { $h += $h/MPDF_K*$this->footer_line_spacing; }
    	}
 	return $h;
 }
@@ -9427,10 +9426,10 @@ function _newobj($obj_id=false,$onlynewobj=false) {
 function _dounderline($x,$y,$txt) {
 	// Now print line exactly where $y secifies - called from Text() and Cell() - adjust  position there
 	// WORD SPACING
-      $w =($this->GetStringWidth($txt)*$this->k) + ($this->charspacing * mb_strlen( $txt, $this->mb_enc )) 
+      $w =($this->GetStringWidth($txt)*MPDF_K) + ($this->charspacing * mb_strlen( $txt, $this->mb_enc )) 
 		 + ( $this->ws * mb_substr_count( $txt, ' ', $this->mb_enc ));
 	//Draw a line
-	return sprintf('%.3f %.3f m %.3f %.3f l S',$x*$this->k,($this->h-$y)*$this->k,($x*$this->k)+$w,($this->h-$y)*$this->k);
+	return sprintf('%.3f %.3f m %.3f %.3f l S',$x*MPDF_K,($this->h-$y)*MPDF_K,($x*MPDF_K)+$w,($this->h-$y)*MPDF_K);
 }
 
 
@@ -10091,7 +10090,7 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 				case 0x02fa:  // CreatePenIndirect
 					$pen = unpack('Sstyle/swidth/sdummy/Cr/Cg/Cb/Ca', $parms);
 					// convert width from twips to user unit
-					$pen['width'] /= (20 * $this->k);
+					$pen['width'] /= (20 * MPDF_K);
 					$pen['type'] = 'P';
 					$this->_AddGDIObject($pen);
 					break;
@@ -10154,12 +10153,12 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 							}
 							if (!$nullPen) {
 								$wmfdata .= $this->SetDColor($this->ConvertColor('rgb('.$obj['r'].','.$obj['g'].','.$obj['b'].')'), true)."\n";
-								$wmfdata .= sprintf("%.3f w\n",$obj['width']*$this->k);
+								$wmfdata .= sprintf("%.3f w\n",$obj['width']*MPDF_K);
 							}
 							if (!empty($dashArray)) {
 								$s = '[';
 								for ($i=0; $i<count($dashArray);$i++) {
-									$s .= $dashArray[$i] * $this->k;
+									$s .= $dashArray[$i] * MPDF_K;
 									if ($i != count($dashArray)-1) { $s .= ' '; }
 								}
 								$s .= '] 0 d';
@@ -10724,13 +10723,13 @@ function _out($s,$ln=true) {
 		// later sent as _out($textto) in printbuffer
 		// Line()
 		if (preg_match('/q \d+\.\d\d+ 0 0 (\d+\.\d\d+) \d+\.\d\d+ \d+\.\d\d+ cm \/(I|FO)\d+ Do Q/',$s,$m)) {	// Image data 
-			$h = ($m[1]/$this->k);
+			$h = ($m[1]/MPDF_K);
 			// Update/overwrite the lowest bottom of printing y value for a column
 			$this->ColDetails[$this->CurrCol]['bottom_margin'] = $this->y+$h;
 		}
 /*-- TABLES --*/
 		else if (preg_match('/\d+\.\d\d+ \d+\.\d\d+ \d+\.\d\d+ ([\-]{0,1}\d+\.\d\d+) re/',$s,$m) && $this->tableLevel>0) { // Rect in table
-			$h = ($m[1]/$this->k);
+			$h = ($m[1]/MPDF_K);
 			// Update/overwrite the lowest bottom of printing y value for a column
 			$this->ColDetails[$this->CurrCol]['bottom_margin'] = max($this->ColDetails[$this->CurrCol]['bottom_margin'],($this->y+$h));
 		}
@@ -10770,7 +10769,7 @@ function _out($s,$ln=true) {
 
 		// Captures eveything in buffer; 
 		if (preg_match('/q \d+\.\d\d+ 0 0 (\d+\.\d\d+) \d+\.\d\d+ \d+\.\d\d+ cm \/(I|FO)\d+ Do Q/',$s,$m)) {	// Image data 
-			$h = ($m[1]/$this->k);
+			$h = ($m[1]/MPDF_K);
 			// Update/overwrite the lowest bottom of printing y value for Keep together block
 			$this->ktBlock[$this->page]['bottom_margin'] = $this->y+$h;
 		}
@@ -10822,7 +10821,7 @@ function watermark( $texte, $angle=45, $fontsize=96, $alpha=0.2 ) {
 	while ( $loop == 0 )
 	{
        $this->SetFont( $this->watermark_font, "B", $szfont, false );	// Don't output
-	 $offset =  ((sin(deg2rad($angle))) * ($szfont/$this->k));
+	 $offset =  ((sin(deg2rad($angle))) * ($szfont/MPDF_K));
 
        $strlen = $this->GetStringWidth($texte);
        if ( $strlen > $maxlen - $offset  )
@@ -10870,8 +10869,8 @@ function Rotate($angle,$x=-1,$y=-1)
 		$angle*=M_PI/180;
 		$c=cos($angle);
 		$s=sin($angle);
-		$cx=$x*$this->k;
-		$cy=($this->h-$y)*$this->k;
+		$cx=$x*MPDF_K;
+		$cy=($this->h-$y)*MPDF_K;
 		$this->_out(sprintf('q %.5f %.5f %.5f %.5f %.3f %.3f cm 1 0 0 1 %.3f %.3f cm',$c,$s,-$s,$c,$cx,$cy,-$cx,-$cy));
 	}
 }
@@ -10879,7 +10878,7 @@ function Rotate($angle,$x=-1,$y=-1)
 // From Invoice
 function RoundedRect($x, $y, $w, $h, $r, $style = '')
 {
-	$k = $this->k;
+	$k = MPDF_K;
 	$hp = $this->h;
 	if($style=='F')
 		$op='f';
@@ -10912,8 +10911,8 @@ function RoundedRect($x, $y, $w, $h, $r, $style = '')
 function _Arc($x1, $y1, $x2, $y2, $x3, $y3)
 {
 	$h = $this->h;
-	$this->_out(sprintf('%.3f %.3f %.3f %.3f %.3f %.3f c ', $x1*$this->k, ($h-$y1)*$this->k,
-						$x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
+	$this->_out(sprintf('%.3f %.3f %.3f %.3f %.3f %.3f c ', $x1*MPDF_K, ($h-$y1)*MPDF_K,
+						$x2*MPDF_K, ($h-$y2)*MPDF_K, $x3*MPDF_K, ($h-$y3)*MPDF_K));
 }
 
 
@@ -11080,8 +11079,8 @@ function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coo
 			$coords = array(0,0,1,0);	// default for original linear gradient (L2R)
 		}
 		$s = ' q';
-		$s .= sprintf(' %.3F %.3F %.3F %.3F re W n', $x*$this->k, ($this->h-$y)*$this->k, $w*$this->k, -$h*$this->k)."\n";
-		$s .= sprintf(' %.3F 0 0 %.3F %.3F %.3F cm', $usew*$this->k, $useh*$this->k, $usex*$this->k, ($this->h-($usey+$useh))*$this->k)."\n";
+		$s .= sprintf(' %.3F %.3F %.3F %.3F re W n', $x*MPDF_K, ($this->h-$y)*MPDF_K, $w*MPDF_K, -$h*MPDF_K)."\n";
+		$s .= sprintf(' %.3F 0 0 %.3F %.3F %.3F cm', $usew*MPDF_K, $useh*MPDF_K, $usex*MPDF_K, ($this->h-($usey+$useh))*MPDF_K)."\n";
 	}
 
 	// RADIAL
@@ -11148,8 +11147,8 @@ function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coo
 			$coords = array(0.5,0.5,0.5,0.5);	// default for radial gradient (centred)
 		}
 		$s = ' q';
-		$s .= sprintf(' %.3F %.3F %.3F %.3F re W n', $x*$this->k, ($this->h-$y)*$this->k, $w*$this->k, -$h*$this->k)."\n";
-		$s .= sprintf(' %.3F 0 0 %.3F %.3F %.3F cm', $usew*$this->k, $useh*$this->k, $usex*$this->k, ($this->h-($usey+$useh))*$this->k)."\n";
+		$s .= sprintf(' %.3F %.3F %.3F %.3F re W n', $x*MPDF_K, ($this->h-$y)*MPDF_K, $w*MPDF_K, -$h*MPDF_K)."\n";
+		$s .= sprintf(' %.3F 0 0 %.3F %.3F %.3F cm', $usew*MPDF_K, $useh*MPDF_K, $usex*MPDF_K, ($this->h-($usey+$useh))*MPDF_K)."\n";
 	}
 
 	$n = count($this->gradients) + 1;
@@ -11653,13 +11652,13 @@ function SetLineHeight($FontPt='',$spacing = '') {
 		$this->lineheight = ($spacing + 0.0) / $k; // convert to number
 	}
 	else  { 
-		if ($FontPt) { $this->lineheight = (($FontPt/$this->k) *$spacing); }
-		else { $this->lineheight = (($this->FontSizePt/$this->k) *$spacing); }
+		if ($FontPt) { $this->lineheight = (($FontPt/MPDF_K) *$spacing); }
+		else { $this->lineheight = (($this->FontSizePt/MPDF_K) *$spacing); }
 	}
    }
    else {
-	if ($FontPt) { $this->lineheight = (($FontPt/$this->k) *$this->normalLineheight); }
-	else { $this->lineheight = (($this->FontSizePt/$this->k) *$this->normalLineheight); }
+	if ($FontPt) { $this->lineheight = (($FontPt/MPDF_K) *$this->normalLineheight); }
+	else { $this->lineheight = (($this->FontSizePt/MPDF_K) *$this->normalLineheight); }
    }
 }
 
@@ -11904,7 +11903,7 @@ function Header($content='') {
   if(count($h)) {
 
 	if ($this->forcePortraitHeaders && $this->CurOrientation=='L' && $this->CurOrientation!=$this->DefOrientation) {
-		$this->_out(sprintf('q 0 -1 1 0 0 %.3f cm ',($this->h*$this->k)));
+		$this->_out(sprintf('q 0 -1 1 0 0 %.3f cm ',($this->h*MPDF_K)));
 		$yadj = $this->w - $this->h;
 		$headerpgwidth = $this->h - $this->orig_lMargin - $this->orig_rMargin;
 		if (($this->mirrorMargins) && (($this->page)%2==0)) {	// EVEN
@@ -11988,11 +11987,11 @@ function Header($content='') {
 		if ($pos!='L' && (strpos($hd,$this->aliasNbPg)!==false || strpos($hd,$this->aliasNbPgGp)!==false)) { 
 			if (strpos($hd,$this->aliasNbPgGp)!==false) { $type= 'nbpggp'; } else { $type= 'nbpg'; }
 			$this->_out('{mpdfheader'.$type.' '.$pos.' ff='.$hff.' fs='.$hfst.' fz='.$hfsz.'}'); 
-			$this->Cell($headerpgwidth ,$maxfontheight/$this->k ,$hd,0,0,$align,0,'',0,0,0,'M');
+			$this->Cell($headerpgwidth ,$maxfontheight/MPDF_K ,$hd,0,0,$align,0,'',0,0,0,'M');
 			$this->_out('Q');
 		}
 		else { 
-			$this->Cell($headerpgwidth ,$maxfontheight/$this->k ,$hd,0,0,$align,0,'',0,0,0,'M');
+			$this->Cell($headerpgwidth ,$maxfontheight/MPDF_K ,$hd,0,0,$align,0,'',0,0,0,'M');
 		}
 		if ($hfcol) { $this->SetTColor($this->ConvertColor(0)); }
 	  }
@@ -12003,7 +12002,7 @@ function Header($content='') {
 	if (isset($h[$side]['line']) && $h[$side]['line']) { 
 		$this->SetLineWidth(0.1);
 		$this->SetDColor($this->ConvertColor(0));
-		$this->Line($headerlmargin , $this->margin_header + ($maxfontheight*(1+$this->header_line_spacing)/$this->k) - $yadj , $headerlmargin + $headerpgwidth, $this->margin_header + ($maxfontheight*(1+$this->header_line_spacing)/$this->k) - $yadj  );
+		$this->Line($headerlmargin , $this->margin_header + ($maxfontheight*(1+$this->header_line_spacing)/MPDF_K) - $yadj , $headerlmargin + $headerpgwidth, $this->margin_header + ($maxfontheight*(1+$this->header_line_spacing)/MPDF_K) - $yadj  );
 	}
 	if ($this->forcePortraitHeaders && $this->CurOrientation=='L' && $this->CurOrientation!=$this->DefOrientation) {
 		$this->_out('Q');
@@ -12314,7 +12313,7 @@ function TableHeaderFooter($content='',$tablestartpage='',$tablestartcolumn ='',
 			$this->patterns[$n] = array('x'=>$px, 'y'=>$py, 'w'=>$pw, 'h'=>$ph, 'pgh'=>$this->h, 'image_id'=>$tablehf['background-image']['image_id'], 'orig_w'=>$orig_w, 'orig_h'=>$orig_h, 'x_pos'=>$tablehf['background-image']['x_pos'] , 'y_pos'=>$tablehf['background-image']['y_pos'] , 'x_repeat'=>$x_repeat, 'y_repeat'=>$y_repeat, 'itype'=>$tablehf['background-image']['itype']);		// mPDF 5.2.04
 			if ($tablehf['background-image']['opacity']>0 && $tablehf['background-image']['opacity']<1) { $opac = $this->SetAlpha($tablehf['background-image']['opacity'],'Normal',true); }
 			else { $opac = ''; }
-			$this->_out(sprintf('q /Pattern cs /P%d scn %s %.3f %.3f %.3f %.3f re f Q', $n, $opac, $px*$this->k, ($this->h-$py)*$this->k, $pw*$this->k, -$ph*$this->k));
+			$this->_out(sprintf('q /Pattern cs /P%d scn %s %.3f %.3f %.3f %.3f re f Q', $n, $opac, $px*MPDF_K, ($this->h-$py)*MPDF_K, $pw*MPDF_K, -$ph*MPDF_K));
 		}
 		else {
 			// mPDF 5.1.008
@@ -12349,7 +12348,7 @@ function TableHeaderFooter($content='',$tablestartpage='',$tablestartcolumn ='',
 		if ($R) {
 					$cellPtSize = $textbuffer[0][11] / $this->shrin_k;
 					if (!$cellPtSize) { $cellPtSize = $this->default_font_size; }
-					$cellFontHeight = ($cellPtSize/$this->k);
+					$cellFontHeight = ($cellPtSize/MPDF_K);
 					$opx = $this->x;
 					$opy = $this->y;
 					$angle = INTVAL($R);
@@ -12435,11 +12434,11 @@ function TableHeaderFooter($content='',$tablestartpage='',$tablestartcolumn ='',
 						$clh = $h- $table['border_spacing_V'];
 						// Set clipping path
 						$s = ' q 0 w ';	// Line width=0
-						$s .= sprintf('%.3f %.3f m ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// start point TL before the arc
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BL
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BR
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly))*$this->k);	// line to TR
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// line to TL
+						$s .= sprintf('%.3f %.3f m ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// start point TL before the arc
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BL
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BR
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TR
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TL
 						$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 						// mPDF 5.1.008
 						$this->tableBackgrounds[$level*9+4][] = array('gradient'=>true, 'x'=>$gx + ($table['border_spacing_H']/2), 'y'=>$gy + ($table['border_spacing_V']/2), 'w'=>$gw - $table['border_spacing_V'], 'h'=>$gh - $table['border_spacing_H'], 'gradtype'=>$g['type'], 'stops'=>$g['stops'], 'colorspace'=>$g['colorspace'], 'coords'=>$g['coords'], 'extend'=>$g['extend'], 'clippath'=>$s);
@@ -12468,11 +12467,11 @@ function TableHeaderFooter($content='',$tablestartpage='',$tablestartcolumn ='',
 						$clh = $h- $table['border_spacing_V'];
 						// Set clipping path
 						$s = ' q 0 w ';	// Line width=0
-						$s .= sprintf('%.3f %.3f m ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// start point TL before the arc
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BL
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BR
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly))*$this->k);	// line to TR
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// line to TL
+						$s .= sprintf('%.3f %.3f m ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// start point TL before the arc
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BL
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BR
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TR
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TL
 						$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 						// mPDF 5.1.008
 						$this->tableBackgrounds[$level*9+4][] = array('gradient'=>true, 'x'=>$gx + ($table['border_spacing_H']/2), 'y'=>$gy + ($table['border_spacing_V']/2), 'w'=>$gw - $table['border_spacing_V'], 'h'=>$gh - $table['border_spacing_H'], 'gradtype'=>$g['type'], 'stops'=>$g['stops'], 'colorspace'=>$g['colorspace'], 'coords'=>$g['coords'], 'extend'=>$g['extend'], 'clippath'=>$s);
@@ -12508,11 +12507,11 @@ function TableHeaderFooter($content='',$tablestartpage='',$tablestartcolumn ='',
 					$clh = $h- $table['border_spacing_V'];
 					// Set clipping path
 					$s = ' q 0 w ';	// Line width=0
-					$s .= sprintf('%.3f %.3f m ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// start point TL before the arc
-					$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BL
-					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BR
-					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly))*$this->k);	// line to TR
-					$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// line to TL
+					$s .= sprintf('%.3f %.3f m ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// start point TL before the arc
+					$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BL
+					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BR
+					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TR
+					$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TL
 					$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 					// mPDF 5.1.008
 					$this->tableBackgrounds[$level*9+5][] = array('x'=>$gx + ($table['border_spacing_H']/2), 'y'=>$gy + ($table['border_spacing_V']/2), 'w'=>$gw - $table['border_spacing_V'], 'h'=>$gh - $table['border_spacing_H'], 'image_id'=>$image_id, 'orig_w'=>$orig_w, 'orig_h'=>$orig_h, 'x_pos'=>$x_pos, 'y_pos'=>$y_pos, 'x_repeat'=>$x_repeat, 'y_repeat'=>$y_repeat, 'clippath'=>$s, 'resize'=>$resize, 'opacity'=>$opacity, 'itype'=>$itype);		// mPDF 5.2.04
@@ -13050,7 +13049,7 @@ function Footer() {
   if(count($h)) {
 
 	if ($this->forcePortraitHeaders && $this->CurOrientation=='L' && $this->CurOrientation!=$this->DefOrientation) {
-		$this->_out(sprintf('q 0 -1 1 0 0 %.3f cm ',($this->h*$this->k)));
+		$this->_out(sprintf('q 0 -1 1 0 0 %.3f cm ',($this->h*MPDF_K)));
 		$headerpgwidth = $this->h - $this->orig_lMargin - $this->orig_rMargin;
 		if (($this->mirrorMargins) && (($this->page)%2==0)) {	// EVEN
 			$headerlmargin = $this->orig_rMargin;
@@ -13109,7 +13108,7 @@ function Footer() {
 		else { $hfcol = ''; }
 		$this->SetFont($hff,$hfst,$hfsz,true,true);
 		$this->x = $headerlmargin ;
-		$this->y = $this->h - $this->margin_footer - ($maxfontheight/$this->k);
+		$this->y = $this->h - $this->margin_footer - ($maxfontheight/MPDF_K);
 		$hd = $this->purify_utf8_text($hd);
 		if ($this->text_input_as_HTML) {
 			$hd = $this->all_entities_to_utf8($hd);
@@ -13129,11 +13128,11 @@ function Footer() {
 		if ($pos!='L' && (strpos($hd,$this->aliasNbPg)!==false || strpos($hd,$this->aliasNbPgGp)!==false)) { 
 			if (strpos($hd,$this->aliasNbPgGp)!==false) { $type= 'nbpggp'; } else { $type= 'nbpg'; }
 			$this->_out('{mpdfheader'.$type.' '.$pos.' ff='.$hff.' fs='.$hfst.' fz='.$hfsz.'}'); 
-			$this->Cell($headerpgwidth ,$maxfontheight/$this->k ,$hd,0,0,$align,0,'',0,0,0,'M');
+			$this->Cell($headerpgwidth ,$maxfontheight/MPDF_K ,$hd,0,0,$align,0,'',0,0,0,'M');
 			$this->_out('Q');
 		}
 		else { 
-			$this->Cell($headerpgwidth ,$maxfontheight/$this->k ,$hd,0,0,$align,0,'',0,0,0,'M');
+			$this->Cell($headerpgwidth ,$maxfontheight/MPDF_K ,$hd,0,0,$align,0,'',0,0,0,'M');
 		}
 		if ($hfcol) { $this->SetTColor($this->ConvertColor(0)); }
 	  }
@@ -13146,7 +13145,7 @@ function Footer() {
 	if (isset($h[$side]['line']) && $h[$side]['line']) { 
 		$this->SetLineWidth(0.1);
 		$this->SetDColor($this->ConvertColor(0));
-		$this->Line($headerlmargin , $this->y-($maxfontheight*($this->footer_line_spacing)/$this->k), $headerlmargin +$headerpgwidth, $this->y-($maxfontheight*($this->footer_line_spacing)/$this->k));
+		$this->Line($headerlmargin , $this->y-($maxfontheight*($this->footer_line_spacing)/MPDF_K), $headerlmargin +$headerpgwidth, $this->y-($maxfontheight*($this->footer_line_spacing)/MPDF_K));
 	}
 	if ($this->forcePortraitHeaders && $this->CurOrientation=='L' && $this->CurOrientation!=$this->DefOrientation) {
 		$this->_out('Q');
@@ -14432,9 +14431,9 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 		$op = 'W n';	// Clipping alternative mode
 		$this->_out("q");
 		$ch = $clip_y1 - $y;
-		$this->_out(sprintf('%.3f %.3f %.3f %.3f re %s',$x*$this->k,($this->h-$y)*$this->k,$w*$this->k,-$ch*$this->k,$op));
+		$this->_out(sprintf('%.3f %.3f %.3f %.3f re %s',$x*MPDF_K,($this->h-$y)*MPDF_K,$w*MPDF_K,-$ch*MPDF_K,$op));
 		if (!empty($block_s)) {
-			$tmp = "q\n".sprintf('%.3f %.3f %.3f %.3f re %s',$x*$this->k,($this->h-$y)*$this->k,$w*$this->k,-$ch*$this->k,$op);
+			$tmp = "q\n".sprintf('%.3f %.3f %.3f %.3f re %s',$x*MPDF_K,($this->h-$y)*MPDF_K,$w*MPDF_K,-$ch*MPDF_K,$op);
 			$tmp .= "\n".$block_s."\nQ";
 			$block_s = $tmp ;
 		}
@@ -14478,8 +14477,8 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 			$lk[2] = $lk[3];
 			$lk[3] = $tmp;
 
-			$lx1 = (($lk[0]/$this->k));
-			$ly1 = (($this->h-($lk[1]/$this->k)));
+			$lx1 = (($lk[0]/MPDF_K));
+			$ly1 = (($this->h-($lk[1]/MPDF_K)));
 			if ($rotate == 90) {
 				$adjx = -($lx1-$bbox_x) + ($preroth - ($ly1-$bbox_y));
 				$adjy = -($ly1-$bbox_y) + ($lx1-$bbox_x);
@@ -14495,16 +14494,16 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 			$lx1 += $adjx;
 			$ly1 += $adjy;
 
-			$lk[0] = $lx1*$this->k;
-			$lk[1] = ($this->h-$ly1)*$this->k;
+			$lk[0] = $lx1*MPDF_K;
+			$lk[1] = ($this->h-$ly1)*MPDF_K;
 		}
 		if ($shrink_f != 1) { 	// i.e. autofit has resized the box
-			$lx1 = (($lk[0]/$this->k)-$x);
+			$lx1 = (($lk[0]/MPDF_K)-$x);
 			$lx2 = $x + ($lx1 * $shrink_f);
-			$lk[0] = $lx2*$this->k;
-			$ly1 = (($this->h-($lk[1]/$this->k))-$y);
+			$lk[0] = $lx2*MPDF_K;
+			$ly1 = (($this->h-($lk[1]/MPDF_K))-$y);
 			$ly2 = $y + ($ly1 * $shrink_f);
-			$lk[1] = ($this->h-$ly2)*$this->k;
+			$lk[1] = ($this->h-$ly2)*MPDF_K;
 			$lk[2] *= $shrink_f;	// width
 			$lk[3] *= $shrink_f;	// height
 		}
@@ -14864,7 +14863,7 @@ function fixCSS($prop) {
 					$format = array($ft[1],$ft[0]);
 				}
 				else { $format = $this->_getPageFormat($v); }
-				if ($format) { $newprop['SHEET-SIZE'] = array($format[0]/$this->k, $format[1]/$this->k); }
+				if ($format) { $newprop['SHEET-SIZE'] = array($format[0]/MPDF_K, $format[1]/MPDF_K); }
 			}
 		}
 		else if ($k == 'BACKGROUND') {
@@ -16341,9 +16340,9 @@ function OpenTag($tag,$attr)
 				$p['R']['font-family'] = $properties['FONT-FAMILY']; 
 			}
 			if (isset($properties['FONT-SIZE'])) { 
-				$p['L']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * $this->k; 
-				$p['C']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * $this->k; 
-				$p['R']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * $this->k; 
+				$p['L']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; 
+				$p['C']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; 
+				$p['R']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; 
 			}
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { 
 				$p['L']['font-style'] = 'B'; 
@@ -16365,7 +16364,7 @@ function OpenTag($tag,$attr)
 			if ($tag=='PAGEHEADER') { $properties = $this->readInlineCSS($attr['HEADER-STYLE-LEFT']); }
 			else { $properties = $this->readInlineCSS($attr['FOOTER-STYLE-LEFT']); }
 			if (isset($properties['FONT-FAMILY'])) { $p['L']['font-family'] = $properties['FONT-FAMILY']; }
-			if (isset($properties['FONT-SIZE'])) { $p['L']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * $this->k; }
+			if (isset($properties['FONT-SIZE'])) { $p['L']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; }
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { $p['L']['font-style'] ='B'; }
 			if (isset($properties['FONT-STYLE']) && $properties['FONT-STYLE']=='ITALIC') { $p['L']['font-style'] .='I'; }
 			if (isset($properties['COLOR'])) { $p['L']['color'] = $properties['COLOR']; }
@@ -16374,7 +16373,7 @@ function OpenTag($tag,$attr)
 			if ($tag=='PAGEHEADER') { $properties = $this->readInlineCSS($attr['HEADER-STYLE-CENTER']); }
 			else { $properties = $this->readInlineCSS($attr['FOOTER-STYLE-CENTER']); }
 			if (isset($properties['FONT-FAMILY'])) { $p['C']['font-family'] = $properties['FONT-FAMILY']; }
-			if (isset($properties['FONT-SIZE'])) { $p['C']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * $this->k; }
+			if (isset($properties['FONT-SIZE'])) { $p['C']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; }
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { $p['C']['font-style'] = 'B'; }
 			if (isset($properties['FONT-STYLE']) && $properties['FONT-STYLE']=='ITALIC') { $p['C']['font-style'] .= 'I'; }
 			if (isset($properties['COLOR'])) { $p['C']['color'] = $properties['COLOR']; }
@@ -16383,7 +16382,7 @@ function OpenTag($tag,$attr)
 			if ($tag=='PAGEHEADER') { $properties = $this->readInlineCSS($attr['HEADER-STYLE-RIGHT']); }
 			else { $properties = $this->readInlineCSS($attr['FOOTER-STYLE-RIGHT']); }
 			if (isset($properties['FONT-FAMILY'])) { $p['R']['font-family'] = $properties['FONT-FAMILY']; }
-			if (isset($properties['FONT-SIZE'])) { $p['R']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * $this->k; }
+			if (isset($properties['FONT-SIZE'])) { $p['R']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; }
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { $p['R']['font-style'] = 'B'; }
 			if (isset($properties['FONT-STYLE']) && $properties['FONT-STYLE']=='ITALIC') { $p['R']['font-style'] .= 'I'; }
 			if (isset($properties['COLOR'])) { $p['R']['color'] = $properties['COLOR']; }
@@ -17811,8 +17810,8 @@ function OpenTag($tag,$attr)
 		$this->SetFont($properties['FONT-FAMILY'],$this->FontStyle,0,false);
 	}
 	if (isset($properties['FONT-SIZE'])) { 
-		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/$this->k);
-  		$this->SetFontSize($mmsize*$this->k,false);
+		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
+  		$this->SetFontSize($mmsize*MPDF_K,false);
 	}
 	if (isset($attr['SPELLCHECK']) && strtolower($attr['SPELLCHECK'])=='true') { 	// mPDF 5.2.03
 		$this->selectoption['SPELLCHECK'] = true; 
@@ -17887,8 +17886,8 @@ function OpenTag($tag,$attr)
 		$this->SetFont($properties['FONT-FAMILY'],'',0,false);
 	}
 	if (isset($properties['FONT-SIZE'])) { 
-		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/$this->k);
-  		$this->SetFontSize($mmsize*$this->k,false);
+		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
+  		$this->SetFontSize($mmsize*MPDF_K,false);
 	}
 	if (isset($properties['COLOR'])) { $objattr['color'] = $this->ConvertColor($properties['COLOR']); }
 	$objattr['fontfamily'] = $this->FontFamily;
@@ -17976,8 +17975,8 @@ function OpenTag($tag,$attr)
 		$this->SetFont($properties['FONT-FAMILY'],$this->FontStyle,0,false);
 	}
 	if (isset($properties['FONT-SIZE'])) { 
-		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],($this->default_font_size/$this->k));
-  		$this->SetFontSize($mmsize*$this->k,false);
+		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],($this->default_font_size/MPDF_K));
+  		$this->SetFontSize($mmsize*MPDF_K,false);
 	}
 	if (isset($properties['COLOR'])) { $objattr['color'] = $this->ConvertColor($properties['COLOR']); }
 	$objattr['fontfamily'] = $this->FontFamily;
@@ -18081,20 +18080,20 @@ function OpenTag($tag,$attr)
 				// WMF units are twips (1/20pt)
 				// divide by 20 to get points
 				// divide by k to get user units
-				$w = abs($info['w'])/(20*$this->k);
-				$h = abs($info['h']) / (20*$this->k);
+				$w = abs($info['w'])/(20*MPDF_K);
+				$h = abs($info['h']) / (20*MPDF_K);
 			}
 			else 
 /*-- END IMAGES-WMF --*/
       	      if ($info['type']=='svg') { 
 				// SVG units are pixels
-				$w = abs($info['w'])/$this->k;
-				$h = abs($info['h'])/$this->k;
+				$w = abs($info['w'])/MPDF_K;
+				$h = abs($info['h'])/MPDF_K;
 			}
 			else {
 				//Put image at default image dpi
-				$w=($info['w']/$this->k) * (72/$this->img_dpi);
-				$h=($info['h']/$this->k) * (72/$this->img_dpi);
+				$w=($info['w']/MPDF_K) * (72/$this->img_dpi);
+				$h=($info['h']/MPDF_K) * (72/$this->img_dpi);
 			}
 			if (isset($properties['IMAGE-RESOLUTION'])) { 
 				if (preg_match('/from-image/i', $properties['IMAGE-RESOLUTION']) && isset($info['set-dpi']) && $info['set-dpi']>0) {
@@ -18370,20 +18369,20 @@ function OpenTag($tag,$attr)
 				// WMF units are twips (1/20pt)
 				// divide by 20 to get points
 				// divide by k to get user units
-				$w = abs($info['w'])/(20*$this->k);
-				$h = abs($info['h']) / (20*$this->k);
+				$w = abs($info['w'])/(20*MPDF_K);
+				$h = abs($info['h']) / (20*MPDF_K);
 			}
 			else 
 /*-- END IMAGES-WMF --*/
       	      if ($info['type']=='svg') { 
 				// SVG units are pixels
-				$w = abs($info['w'])/$this->k;
-				$h = abs($info['h'])/$this->k;
+				$w = abs($info['w'])/MPDF_K;
+				$h = abs($info['h'])/MPDF_K;
 			}
 			else {
 				//Put image at default image dpi
-				$w=($info['w']/$this->k) * (72/$this->img_dpi);
-				$h=($info['h']/$this->k) * (72/$this->img_dpi);
+				$w=($info['w']/MPDF_K) * (72/$this->img_dpi);
+				$h=($info['h']/MPDF_K) * (72/$this->img_dpi);
 			}
 			if (isset($properties['IMAGE-RESOLUTION'])) { 
 				if (preg_match('/from-image/i', $properties['IMAGE-RESOLUTION']) && isset($info['set-dpi']) && $info['set-dpi']>0) {
@@ -18678,9 +18677,9 @@ function OpenTag($tag,$attr)
 			$this->base_table_properties['FONT-FAMILY'] = $properties['FONT-FAMILY'];
 		}
 		if (isset($properties['FONT-SIZE'])) { 
-		   $mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/$this->k);
+		   $mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
 		   if ($mmsize) {
-			$this->default_font_size = $mmsize*($this->k);
+			$this->default_font_size = $mmsize*(MPDF_K);
    			$this->SetFontSize($this->default_font_size,false);
 			$this->base_table_properties['FONT-SIZE'] = $properties['FONT-SIZE'];
 		   }
@@ -19302,9 +19301,9 @@ function OpenTag($tag,$attr)
 			$this->SetFont($properties['FONT-FAMILY'],'',0,false);
 		}
 		if (isset($properties['FONT-SIZE'])) { 
-		   $mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/$this->k);
+		   $mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
 		   if ($mmsize) {
-  			$this->SetFontSize($mmsize*($this->k),false);
+  			$this->SetFontSize($mmsize*(MPDF_K),false);
 		   }
 		}
 		$cell['dfs'] = $this->FontSize;	// Default Font size
@@ -21304,7 +21303,7 @@ function printbuffer($arrayaux,$blockstate=0,$is_table=false,$is_list=false)
 		if (isset($this->floatmargins['L']) && $this->y <= $this->floatmargins['L']['y1'] && $this->y >= $this->floatmargins['L']['y0']) { $maxWidth -= $this->floatmargins['L']['w']; }
 /*-- END CSS-IMAGE-FLOAT --*/
 
-		list($skipln) = $this->inlineObject($objattr['type'], '', $this->y, $objattr,$this->lMargin, ($this->flowingBlockAttr['contentWidth']/$this->k), $maxWidth, $this->flowingBlockAttr['height'], false, $is_table);
+		list($skipln) = $this->inlineObject($objattr['type'], '', $this->y, $objattr,$this->lMargin, ($this->flowingBlockAttr['contentWidth']/MPDF_K), $maxWidth, $this->flowingBlockAttr['height'], false, $is_table);
 		//  1 -> New line needed because of width
 		// -1 -> Will fit width on line but NEW PAGE REQUIRED because of height
 		// -2 -> Will not fit on line therefore needs new line but thus NEW PAGE REQUIRED
@@ -21385,7 +21384,7 @@ function printbuffer($arrayaux,$blockstate=0,$is_table=false,$is_list=false)
 		  $w = $objattr['width'];
 		  $h = abs($objattr['height']); 
 
-		  $widthLeft = $maxWidth - ($this->flowingBlockAttr['contentWidth']/$this->k);
+		  $widthLeft = $maxWidth - ($this->flowingBlockAttr['contentWidth']/MPDF_K);
 		  $maxHeight = $this->h - ($this->tMargin + $this->margin_header + $this->bMargin + 10) ;
 		  // For Images
 		  $extraWidth = ($objattr['border_left']['w'] + $objattr['border_right']['w'] + $objattr['margin_left']+ $objattr['margin_right']);
@@ -21843,16 +21842,16 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f m ',($x0 + $w - ($border_top/2))*$this->k, ($this->h-($y0 + ($border_top/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f m ',($x0 + $w - ($border_top/2))*MPDF_K, ($this->h-($y0 + ($border_top/2)))*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 				if ($brTL_H && $brTL_V ) {
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_top/2) + $brTL_H )*$this->k, ($this->h-($y0 + ($border_top/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_top/2) + $brTL_H )*MPDF_K, ($this->h-($y0 + ($border_top/2)))*MPDF_K));
 					$this->_out($this->_EllipseArc($x0 + $brTL_H, $y0 + $brTL_V, $brTL_H - $border_top/2 , $brTL_V - $border_top/2 , 2, 1));
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_top/2))*$this->k, ($this->h-($y0 + ($border_top/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_top/2))*MPDF_K, ($this->h-($y0 + ($border_top/2)))*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 /*-- END BORDER-RADIUS --*/
@@ -21881,16 +21880,16 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f m ',($x0 + ($border_bottom/2))*$this->k, ($this->h-($y0 + $h - ($border_bottom/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f m ',($x0 + ($border_bottom/2))*MPDF_K, ($this->h-($y0 + $h - ($border_bottom/2)))*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 				if ($brBR_H && $brBR_V ) {
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_bottom/2) - $brBR_H )*$this->k, ($this->h-($y0 + $h - ($border_bottom/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_bottom/2) - $brBR_H )*MPDF_K, ($this->h-($y0 + $h - ($border_bottom/2)))*MPDF_K));
 					$this->_out($this->_EllipseArc($x0 + $w - $brBR_H, $y0 + $h - $brBR_V, $brBR_H - $border_bottom/2 , $brBR_V - $border_bottom/2 , 4, 1));
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_bottom/2) )*$this->k, ($this->h-($y0 + $h - ($border_bottom/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_bottom/2) )*MPDF_K, ($this->h-($y0 + $h - ($border_bottom/2)))*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 /*-- END BORDER-RADIUS --*/
@@ -21917,16 +21916,16 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f m ',($x0 + ($border_left/2))*$this->k, ($this->h-($y0 + ($border_left/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f m ',($x0 + ($border_left/2))*MPDF_K, ($this->h-($y0 + ($border_left/2)))*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 				if ($brBL_V && $brBL_H ) {
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_left/2))*$this->k, ($this->h-($y0 + $h - ($border_left/2)- $brBL_V) )*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_left/2))*MPDF_K, ($this->h-($y0 + $h - ($border_left/2)- $brBL_V) )*MPDF_K));
 					$this->_out($this->_EllipseArc($x0 + $brBL_H, $y0 + $h - $brBL_V, $brBL_H - $border_left/2 , $brBL_V - $border_left/2, 3, 1));
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_left/2))*$this->k, ($this->h-($y0 + $h - ($border_left/2)) )*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + ($border_left/2))*MPDF_K, ($this->h-($y0 + $h - ($border_left/2)) )*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 /*-- END BORDER-RADIUS --*/
@@ -21953,16 +21952,16 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f m ',($x0 + $w - ($border_right/2))*$this->k, ($this->h-($y0 + $h - ($border_right/2)))*$this->k));
+					$this->_out(sprintf('%.3f %.3f m ',($x0 + $w - ($border_right/2))*MPDF_K, ($this->h-($y0 + $h - ($border_right/2)))*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 				if ($brTR_V && $brTR_H ) {
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_right/2))*$this->k, ($this->h-($y0 + ($border_right/2) + $brTR_V) )*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_right/2))*MPDF_K, ($this->h-($y0 + ($border_right/2) + $brTR_V) )*MPDF_K));
 					$this->_out($this->_EllipseArc($x0 + $w - $brTR_H, $y0 + $brTR_V, $brTR_H - $border_right/2 , $brTR_V - $border_right/2, 1, 1));
 				}
 				else {
 /*-- END BORDER-RADIUS --*/
-					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_right/2))*$this->k, ($this->h-($y0 + ($border_right/2)) )*$this->k));
+					$this->_out(sprintf('%.3f %.3f l ',($x0 + $w - ($border_right/2))*MPDF_K, ($this->h-($y0 + ($border_right/2)) )*MPDF_K));
 /*-- BORDER-RADIUS --*/
 				}
 /*-- END BORDER-RADIUS --*/
@@ -21989,7 +21988,7 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				if (!$brset && $tbd['style']=='double') {
 					$this->SetLineWidth($tbd['w']/3);
 					$this->SetDColor($tbcol);
-					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + $w - ($border_top/2))*$this->k, ($this->h-($y0 + ($border_top/2)))*$this->k, ($x0 + ($border_top/2))*$this->k, ($this->h-($y0 + ($border_top/2)))*$this->k ));
+					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + $w - ($border_top/2))*MPDF_K, ($this->h-($y0 + ($border_top/2)))*MPDF_K, ($x0 + ($border_top/2))*MPDF_K, ($this->h-($y0 + ($border_top/2)))*MPDF_K ));
 				}
 			}
 		}
@@ -21999,7 +21998,7 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				if (!$brset && $tbd['style']=='double') {
 					$this->SetLineWidth($tbd['w']/3);
 					$this->SetDColor($tbcol);
-					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + ($border_bottom/2))*$this->k, ($this->h-($y0 + $h - ($border_bottom/2)))*$this->k, ($x0 + $w - ($border_bottom/2) )*$this->k, ($this->h-($y0 + $h - ($border_bottom/2)))*$this->k ));
+					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + ($border_bottom/2))*MPDF_K, ($this->h-($y0 + $h - ($border_bottom/2)))*MPDF_K, ($x0 + $w - ($border_bottom/2) )*MPDF_K, ($this->h-($y0 + $h - ($border_bottom/2)))*MPDF_K ));
 				}
 			}
 		}
@@ -22009,7 +22008,7 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				if (!$brset && $tbd['style']=='double') {
 					$this->SetLineWidth($tbd['w']/3);
 					$this->SetDColor($tbcol);
-					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + ($border_left/2))*$this->k, ($this->h-($y0 + ($border_left/2)))*$this->k, ($x0 + ($border_left/2))*$this->k, ($this->h-($y0 + $h - ($border_left/2)) )*$this->k));
+					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + ($border_left/2))*MPDF_K, ($this->h-($y0 + ($border_left/2)))*MPDF_K, ($x0 + ($border_left/2))*MPDF_K, ($this->h-($y0 + $h - ($border_left/2)) )*MPDF_K));
 				}
 			}
 		}
@@ -22019,7 +22018,7 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 				if (!$brset && $tbd['style']=='double') {
 					$this->SetLineWidth($tbd['w']/3);
 					$this->SetDColor($tbcol);
-					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + $w - ($border_right/2))*$this->k, ($this->h-($y0 + $h - ($border_right/2)))*$this->k, ($x0 + $w - ($border_right/2))*$this->k, ($this->h-($y0 + ($border_right/2)) )*$this->k));
+					$this->_out(sprintf('%.3f %.3f m %.3f %.3f l S', ($x0 + $w - ($border_right/2))*MPDF_K, ($this->h-($y0 + $h - ($border_right/2)))*MPDF_K, ($x0 + $w - ($border_right/2))*MPDF_K, ($this->h-($y0 + ($border_right/2)) )*MPDF_K));
 				}
 			}
 		}
@@ -22073,31 +22072,31 @@ function PaintDivBB($divider='',$blockstate=0,$blvl=0) {
 
 	// Set clipping path
 	$s = ' q 0 w ';	// Line width=0
-	$s .= sprintf('%.3f %.3f m ', ($bgx0+$brbgTL_H )*$this->k, ($this->h-$bgy0)*$this->k);	// start point TL before the arc
+	$s .= sprintf('%.3f %.3f m ', ($bgx0+$brbgTL_H )*MPDF_K, ($this->h-$bgy0)*MPDF_K);	// start point TL before the arc
 /*-- BORDER-RADIUS --*/
 	if ($brbgTL_H || $brbgTL_V) {
 		$s .= $this->_EllipseArc($bgx0+$brbgTL_H, $bgy0+$brbgTL_V, $brbgTL_H , $brbgTL_V , 2);	// segment 2 TL
 	}
 /*-- END BORDER-RADIUS --*/
-	$s .= sprintf('%.3f %.3f l ', ($bgx0)*$this->k, ($this->h-($bgy1-$brbgBL_V ))*$this->k);	// line to BL
+	$s .= sprintf('%.3f %.3f l ', ($bgx0)*MPDF_K, ($this->h-($bgy1-$brbgBL_V ))*MPDF_K);	// line to BL
 /*-- BORDER-RADIUS --*/
 	if ($brbgBL_H || $brbgBL_V) {
 		$s .= $this->_EllipseArc($bgx0+$brbgBL_H, $bgy1-$brbgBL_V, $brbgBL_H , $brbgBL_V , 3);	// segment 3 BL
 	}
 /*-- END BORDER-RADIUS --*/
-	$s .= sprintf('%.3f %.3f l ', ($bgx1-$brbgBR_H )*$this->k, ($this->h-($bgy1))*$this->k);	// line to BR
+	$s .= sprintf('%.3f %.3f l ', ($bgx1-$brbgBR_H )*MPDF_K, ($this->h-($bgy1))*MPDF_K);	// line to BR
 /*-- BORDER-RADIUS --*/
 	if ($brbgBR_H || $brbgBR_V) {
 		$s .= $this->_EllipseArc($bgx1-$brbgBR_H, $bgy1-$brbgBR_V, $brbgBR_H , $brbgBR_V , 4);	// segment 4 BR
 	}
 /*-- END BORDER-RADIUS --*/
-	$s .= sprintf('%.3f %.3f l ', ($bgx1)*$this->k, ($this->h-($bgy0+$brbgTR_V))*$this->k);	// line to TR
+	$s .= sprintf('%.3f %.3f l ', ($bgx1)*MPDF_K, ($this->h-($bgy0+$brbgTR_V))*MPDF_K);	// line to TR
 /*-- BORDER-RADIUS --*/
 	if ($brbgTR_H || $brbgTR_V) {
 		$s .= $this->_EllipseArc($bgx1-$brbgTR_H, $bgy0+$brbgTR_V, $brbgTR_H , $brbgTR_V , 1);	// segment 1 TR
 	}
 /*-- END BORDER-RADIUS --*/
-	$s .= sprintf('%.3f %.3f l ', ($bgx0+$brbgTL_H )*$this->k, ($this->h-$bgy0)*$this->k);	// line to TL
+	$s .= sprintf('%.3f %.3f l ', ($bgx0+$brbgTL_H )*MPDF_K, ($this->h-$bgy0)*MPDF_K);	// line to TL
 	$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 
 	if ($this->blk[$blvl]['bgcolor']) { 
@@ -22149,8 +22148,8 @@ function _EllipseArc($x0, $y0, $rx, $ry, $seg = 1, $part=false, $start=false) {	
 	$s = '';
    	if ($rx<0) { $rx = 0; }
 	if ($ry<0) { $ry = 0; }
-	$rx *= $this->k;
-	$ry *= $this->k;
+	$rx *= MPDF_K;
+	$ry *= MPDF_K;
 	$astart = 0;
 	if ($seg == 1) {	// Top Right
 		$afinish = 90;
@@ -22173,8 +22172,8 @@ function _EllipseArc($x0, $y0, $rx, $ry, $seg = 1, $part=false, $start=false) {	
 	$totalAngle = $afinish - $astart;
 	$dt = $totalAngle / $nSeg;	// segment angle
 	$dtm = $dt/3;
-	$x0 *= $this->k;
-	$y0 = ($this->h - $y0) * $this->k;
+	$x0 *= MPDF_K;
+	$y0 = ($this->h - $y0) * MPDF_K;
 	$t1 = $astart;
 	$a0 = $x0 + ($rx * cos($t1));
 	$b0 = $y0 + ($ry * sin($t1));
@@ -22783,7 +22782,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 		$v = $arrayaux['FONT-SIZE'];
 		if(is_numeric($v[0])) {
 			$mmsize = $this->ConvertSize($v,$this->FontSize);
-			$this->SetFontSize( $mmsize*($this->k),false ); //Get size in points (pt)
+			$this->SetFontSize( $mmsize*(MPDF_K),false ); //Get size in points (pt)
 		}
 		else{
   			$v = strtoupper($v);
@@ -24645,7 +24644,7 @@ function _tableHeight(&$table){
 					$aux4= rtrim($aux4);
 	       			$tempch = $this->GetStringWidth($aux4);
 					if ($c['R'] >= 45 && $c['R'] < 90) {
-						$tempch = ((sin(deg2rad($c['R']))) * $tempch ) + ((sin(deg2rad($c['R']))) * (($c['textbuffer'][0][11]/$this->k) / $this->shrin_k));
+						$tempch = ((sin(deg2rad($c['R']))) * $tempch ) + ((sin(deg2rad($c['R']))) * (($c['textbuffer'][0][11]/MPDF_K) / $this->shrin_k));
 					} 
 					$this->SetFont($s_f,$s_st,$s_fs,true,true);
 					$ch = ($tempch ) + $extrh ;  
@@ -25864,7 +25863,7 @@ function _tableWrite(&$table){
 	if(!isset($table['overflow'])) { $table['overflow'] = null; }
 	if ($table['overflow']=='hidden' && $level==1 && !$this->table_rotate && !$this->ColActive) {
 		//Bounding rectangle to clip
-		$this->tableClipPath = sprintf('q %.3f %.3f %.3f %.3f re W n',$x0*$this->k,$this->h*$this->k,$this->blk[$this->blklvl]['inner_width']*$this->k,-$this->h*$this->k);
+		$this->tableClipPath = sprintf('q %.3f %.3f %.3f %.3f re W n',$x0*MPDF_K,$this->h*MPDF_K,$this->blk[$this->blklvl]['inner_width']*MPDF_K,-$this->h*MPDF_K);
 		$this->_out($this->tableClipPath);
 	}
 	else { $this->tableClipPath = ''; }
@@ -26536,7 +26535,7 @@ function _tableWrite(&$table){
 					$this->patterns[$n] = array('x'=>$px, 'y'=>$py, 'w'=>$pw, 'h'=>$ph, 'pgh'=>$this->h, 'image_id'=>$cell['background-image']['image_id'], 'orig_w'=>$orig_w, 'orig_h'=>$orig_h, 'x_pos'=>$cell['background-image']['x_pos'] , 'y_pos'=>$cell['background-image']['y_pos'] , 'x_repeat'=>$x_repeat, 'y_repeat'=>$y_repeat);
 					if ($cell['background-image']['opacity']>0 && $cell['background-image']['opacity']<1) { $opac = $this->SetAlpha($cell['background-image']['opacity'],'Normal',true); }
 					else { $opac = ''; }
-					$this->_out(sprintf('q /Pattern cs /P%d scn %s %.3f %.3f %.3f %.3f re f Q', $n, $opac, $px*$this->k, ($this->h-$py)*$this->k, $pw*$this->k, -$ph*$this->k));
+					$this->_out(sprintf('q /Pattern cs /P%d scn %s %.3f %.3f %.3f %.3f re f Q', $n, $opac, $px*MPDF_K, ($this->h-$py)*MPDF_K, $pw*MPDF_K, -$ph*MPDF_K));
 				}
 				else {
 					// mPDF 5.1.008
@@ -26653,7 +26652,7 @@ function _tableWrite(&$table){
 				if ($cell['R']) {
 					$cellPtSize = $cell['textbuffer'][0][11] / $this->shrin_k;
 					if (!$cellPtSize) { $cellPtSize = $this->default_font_size; }
-					$cellFontHeight = ($cellPtSize/$this->k);
+					$cellFontHeight = ($cellPtSize/MPDF_K);
 					$opx = $this->x;
 					$angle = INTVAL($cell['R']);
 					// Only allow 45 to 89 degrees (when bottom-aligned) or exactly 90 or -90
@@ -26752,11 +26751,11 @@ function _tableWrite(&$table){
 						$clh = $h- $table['border_spacing_V'];
 						// Set clipping path
 						$s = ' q 0 w ';	// Line width=0
-						$s .= sprintf('%.3f %.3f m ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// start point TL before the arc
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BL
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BR
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly))*$this->k);	// line to TR
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// line to TL
+						$s .= sprintf('%.3f %.3f m ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// start point TL before the arc
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BL
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BR
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TR
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TL
 						$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 						// mPDF 5.1.008
 						$this->tableBackgrounds[$level*9+4][] = array('gradient'=>true, 'x'=>$gx + ($table['border_spacing_H']/2), 'y'=>$gy + ($table['border_spacing_V']/2), 'w'=>$gw - $table['border_spacing_V'], 'h'=>$gh - $table['border_spacing_H'], 'gradtype'=>$g['type'], 'stops'=>$g['stops'], 'colorspace'=>$g['colorspace'], 'coords'=>$g['coords'], 'extend'=>$g['extend'], 'clippath'=>$s);
@@ -26784,11 +26783,11 @@ function _tableWrite(&$table){
 						$clh = $h- $table['border_spacing_V'];
 						// Set clipping path
 						$s = ' q 0 w ';	// Line width=0
-						$s .= sprintf('%.3f %.3f m ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// start point TL before the arc
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BL
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BR
-						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly))*$this->k);	// line to TR
-						$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// line to TL
+						$s .= sprintf('%.3f %.3f m ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// start point TL before the arc
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BL
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BR
+						$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TR
+						$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TL
 						$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 						// mPDF 5.1.008
 						$this->tableBackgrounds[$level*9+4][] = array('gradient'=>true, 'x'=>$gx + ($table['border_spacing_H']/2), 'y'=>$gy + ($table['border_spacing_V']/2), 'w'=>$gw - $table['border_spacing_V'], 'h'=>$gh - $table['border_spacing_H'], 'gradtype'=>$g['type'], 'stops'=>$g['stops'], 'colorspace'=>$g['colorspace'], 'coords'=>$g['coords'], 'extend'=>$g['extend'], 'clippath'=>$s);
@@ -26824,11 +26823,11 @@ function _tableWrite(&$table){
 					$clh = $h - $table['border_spacing_V'];
 					// Set clipping path
 					$s = ' q 0 w ';	// Line width=0
-					$s .= sprintf('%.3f %.3f m ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// start point TL 
-					$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BL
-					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly+$clh))*$this->k);	// line to BR
-					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*$this->k, ($this->h-($cly))*$this->k);	// line to TR
-					$s .= sprintf('%.3f %.3f l ', ($clx)*$this->k, ($this->h-($cly))*$this->k);	// line to TL
+					$s .= sprintf('%.3f %.3f m ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// start point TL 
+					$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BL
+					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly+$clh))*MPDF_K);	// line to BR
+					$s .= sprintf('%.3f %.3f l ', ($clx+$clw)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TR
+					$s .= sprintf('%.3f %.3f l ', ($clx)*MPDF_K, ($this->h-($cly))*MPDF_K);	// line to TL
 					$s .= ' W n ';	// Ends path no-op & Sets the clipping path
 					// mPDF 5.1.008
 					$this->tableBackgrounds[$level*9+5][] = array('x'=>$gx + ($table['border_spacing_H']/2), 'y'=>$gy + ($table['border_spacing_V']/2), 'w'=>$gw - $table['border_spacing_V'], 'h'=>$gh - $table['border_spacing_H'], 'image_id'=>$image_id, 'orig_w'=>$orig_w, 'orig_h'=>$orig_h, 'x_pos'=>$x_pos, 'y_pos'=>$y_pos, 'x_repeat'=>$x_repeat, 'y_repeat'=>$y_repeat, 'clippath'=>$s, 'resize'=>$resize, 'opacity'=>$opacity, 'itype'=>$itype);		// mPDF 5.2.04
@@ -27038,15 +27037,15 @@ function _putextgstates() {
 			$this->_out('/FormType 1');
 			// Left/Bottom/Right/Top
 			$this->_out(sprintf('/BBox [%.2f %.2f %.2f %.2f]',
-				$tpl['box']['x']*$this->k,
-				$tpl['box']['y']*$this->k,
-				($tpl['box']['x'] + $tpl['box']['w'])*$this->k,
-				($tpl['box']['y'] + $tpl['box']['h'])*$this->k  )
+				$tpl['box']['x']*MPDF_K,
+				$tpl['box']['y']*MPDF_K,
+				($tpl['box']['x'] + $tpl['box']['w'])*MPDF_K,
+				($tpl['box']['y'] + $tpl['box']['h'])*MPDF_K  )
 			);
 
 
 			if (isset($tpl['box']))
-				$this->_out(sprintf('/Matrix [1 0 0 1 %.5f %.5f]',-$tpl['box']['x']*$this->k, -$tpl['box']['y']*$this->k));
+				$this->_out(sprintf('/Matrix [1 0 0 1 %.5f %.5f]',-$tpl['box']['x']*MPDF_K, -$tpl['box']['y']*MPDF_K));
 			$this->_out('/Resources ');
 
 			if (isset($tpl['resources'])) {
@@ -27106,16 +27105,16 @@ function _putpatterns() {
 		if (stristr($x_pos ,'%') ) { 
 			$x_pos += 0; 
 			$x_pos /= 100; 
-			$x_pos = ($w * $x_pos) - ($orig_w/$this->k * $x_pos);
+			$x_pos = ($w * $x_pos) - ($orig_w/MPDF_K * $x_pos);
 		}
 		$y_pos = $this->patterns[$i]['y_pos'];
 		if (stristr($y_pos ,'%') ) { 
 			$y_pos += 0; 
 			$y_pos /= 100; 
-			$y_pos = ($h * $y_pos) - ($orig_h/$this->k * $y_pos);
+			$y_pos = ($h * $y_pos) - ($orig_h/MPDF_K * $y_pos);
 		}
-		$adj_x = ($x_pos + $x) *$this->k;
-		$adj_y = (($pgh - $y_pos - $y)*$this->k) - $orig_h ;
+		$adj_x = ($x_pos + $x) *MPDF_K;
+		$adj_y = (($pgh - $y_pos - $y)*MPDF_K) - $orig_h ;
 		$img_obj = false;
 		if ($itype == 'svg' || $itype == 'wmf') {
 			foreach($this->formobjects AS $fo) {
@@ -27857,7 +27856,7 @@ function _putbookmarks()
 		if (isset($this->pageDim[$o['p']]['h'])) { $h=$this->pageDim[$o['p']]['h']; }
 		else { $h = 0; }
 
-		$this->_out(sprintf('/Dest [%d 0 R /XYZ 0 %.3f null]',1+2*($o['p']),($h-$o['y'])*$this->k));
+		$this->_out(sprintf('/Dest [%d 0 R /XYZ 0 %.3f null]',1+2*($o['p']),($h-$o['y'])*MPDF_K));
 
 		$this->_out('/Count 0>>');
 		$this->_out('endobj');
@@ -29263,7 +29262,7 @@ function NewColumn() {
 }
 
 function printcolumnbuffer() {
-   $k = $this->k;
+   $k = MPDF_K;
    // Columns ended (but page not ended) -> try to match all columns - unless disabled by using a custom column-break
    if (!$this->ColActive && $this->ColumnAdjust && !$this->keepColumns) {
 	// Calculate adjustment to add to each column to calculate rel_y value
@@ -29519,7 +29518,7 @@ function printcolumnbuffer() {
    // Columns not ended but new page -> align columns (can leave the columns alone - just tidy up the height)
    else if ($this->colvAlign == 'J' && $this->ColumnAdjust && !$this->keepColumns)  {
 
-	$k = $this->k;
+	$k = MPDF_K;
 	// calculate the lowest bottom margin
 	$lowest_bottom_y = 0;
 	foreach($this->columnbuffer AS $key=>$s) { 
@@ -29645,7 +29644,7 @@ function printcolumnbuffer() {
    // Just reproduce the page as it was
    else {
 	// If page has not ended but height adjustment was disabled by custom column-break - adjust y
-	$k = $this->k;
+	$k = MPDF_K;
 	$lowest_bottom_y = 0;
 //	if ((!$this->ColumnAdjust && !$this->ColActive) || $this->keepColumns) {
 	if (!$this->ColActive && (!$this->ColumnAdjust || $this->keepColumns)) {
@@ -29854,10 +29853,10 @@ function printtablebuffer() {
 
 	foreach($this->tbrot_Links AS $p => $l) {
 	    foreach($l AS $v) {
-		$w = $v[2]/$this->k;
-		$h = $v[3]/$this->k;
-		$ax = ($v[0]/$this->k) - $this->tbrot_x0;
-		$ay = (($this->hPt-$v[1])/$this->k) - $this->tbrot_y0;
+		$w = $v[2]/MPDF_K;
+		$h = $v[3]/MPDF_K;
+		$ax = ($v[0]/MPDF_K) - $this->tbrot_x0;
+		$ay = (($this->hPt-$v[1])/MPDF_K) - $this->tbrot_y0;
 		if ($this->table_rotate > 1) {	// clockwise
 			$bx = $this->tbrot_x0+$xadj-$ay-$h;
 			$by = $this->tbrot_y0+$yadj+$ax;
@@ -29866,10 +29865,10 @@ function printtablebuffer() {
 			$bx = $this->tbrot_x0+$xadj+$ay;
 			$by = $this->tbrot_y0+$yadj-$ax-$w;
 		}
-		$v[0] = $bx*$this->k;
-		$v[1] = ($this->h-$by)*$this->k;
-		$v[2] = $h*$this->k;	// swap width and height
-		$v[3] = $w*$this->k;
+		$v[0] = $bx*MPDF_K;
+		$v[1] = ($this->h-$by)*MPDF_K;
+		$v[2] = $h*MPDF_K;	// swap width and height
+		$v[3] = $w*MPDF_K;
 		$this->PageLinks[$p][] = $v;
 	    }
 	}
@@ -30029,8 +30028,8 @@ function printkwtbuffer() {
 	    foreach($l AS $v) {
 		$bx = $this->kwt_x0+$xadj;
 		$by = $this->kwt_y0+$yadj;
-		$v[0] = $bx*$this->k;
-		$v[1] = ($this->h-$by)*$this->k;
+		$v[0] = $bx*MPDF_K;
+		$v[1] = ($this->h-$by)*MPDF_K;
 		$this->PageLinks[$p][] = $v;
 	    }
 	}
@@ -30122,7 +30121,7 @@ function printfloatbuffer() {
 //==================================================================
 
 function printdivbuffer() {
-	$k = $this->k;
+	$k = MPDF_K;
 	$p1 = $this->blk[$this->blklvl]['startpage'];
 	$p2 = $this->page;
 	$bottom[$p1] = $this->ktBlock[$p1]['bottom_margin'];
@@ -30326,7 +30325,7 @@ function Ellipse($x,$y,$rx,$ry,$style='S') {
 	else { $op='S'; }
 	$lx=4/3*(M_SQRT2-1)*$rx;
 	$ly=4/3*(M_SQRT2-1)*$ry;
-	$k=$this->k;
+	$k=MPDF_K;
 	$h=$this->h;
 	$this->_out(sprintf('%.3f %.3f m %.3f %.3f %.3f %.3f %.3f %.3f c', ($x+$rx)*$k,($h-$y)*$k, ($x+$rx)*$k,($h-($y-$ly))*$k, ($x+$lx)*$k,($h-($y-$ry))*$k, $x*$k,($h-($y-$ry))*$k));
 	$this->_out(sprintf('%.3f %.3f %.3f %.3f %.3f %.3f c', ($x-$lx)*$k,($h-($y-$ry))*$k, 	($x-$rx)*$k,($h-($y-$ly))*$k, 	($x-$rx)*$k,($h-$y)*$k)); 
@@ -30946,19 +30945,19 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 			   // max width is $fbwi 
 			   $loop = 0;
 			   while ( $loop == 0 ) {
-				$this->SetFontSize($codestr_fontsize*1.4*$this->k, false);	// don't write
+				$this->SetFontSize($codestr_fontsize*1.4*MPDF_K, false);	// don't write
 				$sz = $this->GetStringWidth( $codestr );
 				if ($sz > $fbwi)
 					$codestr_fontsize -= 0.1;
 				else
 					$loop ++;
 			   }
-			   $this->SetFont('','',$codestr_fontsize*1.4*$this->k, true, true);	// * 1.4 because font height is only 7/10 of given mm
+			   $this->SetFont('','',$codestr_fontsize*1.4*MPDF_K, true, true);	// * 1.4 because font height is only 7/10 of given mm
  			   // WORD SPACING
 			   if ($fbwi > $sz) {
 				$xtra =  $fbwi - $sz;
 				$charspacing = $xtra / (strlen($codestr)-1);
-				if ($charspacing) { $this->_out(sprintf('BT %.3f Tc ET',$charspacing*$this->k)); }
+				if ($charspacing) { $this->_out(sprintf('BT %.3f Tc ET',$charspacing*MPDF_K)); }
 			   }
 			   $this->y = $y + $paddingT - ($codestr_fontsize ) - $tisbnm ; 
 			   $this->Cell($fbw , $codestr_fontsize, $codestr);
@@ -31023,7 +31022,7 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 				if (!$supplement) $charRO = '>'; // Right Outer
 			}
 
-			$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*$this->k);	// 3mm numerals (FontSize is larger to account for space above/below characters)
+			$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*MPDF_K);	// 3mm numerals (FontSize is larger to account for space above/below characters)
 
 			if (!$this->usingCoreFont) { $cw = $this->_getCharWidth($this->CurrentFont['cw'],32)*3*$fh*$size/1000; }	// character width at 3mm
 			else { $cw = $this->_getCharWidth($this->CurrentFont['cw'],48)*3*$fh*$size/1000; }		// 48 == char "0"
@@ -31039,12 +31038,12 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
  			// WORD SPACING for inner chars
 			$xtra =  $textw - ($cw*$chars);
 			$charspacing = $xtra / ($chars-1);
-			if ($charspacing) { $this->_out(sprintf('BT %.3f Tc ET',$charspacing*$this->k)); }
+			if ($charspacing) { $this->_out(sprintf('BT %.3f Tc ET',$charspacing*MPDF_K)); }
 
 			if (is_array($bgcol)) { $this->SetFColor($bgcol); }
 			else { $this->SetFColor($this->ConvertColor(255)); }
 
-			$this->SetFontSize(3*$fh*$size*$this->k);	// 3mm numerals (FontSize is larger to account for space above/below characters)
+			$this->SetFontSize(3*$fh*$size*MPDF_K);	// 3mm numerals (FontSize is larger to account for space above/below characters)
 
 			// Inner left half characters
 			$this->x = $x + $paddingL + $llm + $outerp;
@@ -31059,7 +31058,7 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 			if ($charspacing) { $this->_out('BT 0 Tc ET'); }
 
 			// Outer Right character
-			$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*$this->k);	// 3mm numerals (FontSize is larger to account for space above/below characters)
+			$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*MPDF_K);	// 3mm numerals (FontSize is larger to account for space above/below characters)
 
 			$this->x = $x + $paddingL + $llm + $bcw + $rlm - ($cw*($outerfontsize/3)*0.9); // 0.9 is correction as char does not fill full width
 			$this->y = $y_text_outer; 
@@ -31099,13 +31098,13 @@ function WriteBarcode($code, $showtext=1, $x='', $y='', $size=1, $border=0, $pad
 				// Characters
 				if (is_array($bgcol)) { $this->SetFColor($bgcol); }
 				else { $this->SetFColor($this->ConvertColor(255)); }
-				$this->SetFontSize(3*$fh*$size*$this->k);	// 3mm numerals (FontSize is larger to account for space above/below characters)
+				$this->SetFontSize(3*$fh*$size*MPDF_K);	// 3mm numerals (FontSize is larger to account for space above/below characters)
 				$this->x = $x + $paddingL + $llm;
 				$this->y = $y + $paddingT; 
 				$this->Cell($bcw, $num_height, $supplement_code, 0, 0, 'C');
 
 				// Outer Right character (light margin)
-				$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*$this->k);	// 3mm numerals (FontSize is larger to account for space above/below characters)
+				$this->SetFontSize(($outerfontsize/3)*3*$fh*$size*MPDF_K);	// 3mm numerals (FontSize is larger to account for space above/below characters)
 				$this->x = $x + $paddingL + $llm + $bcw + $rlm - ($cw*0.9); // 0.9 is correction as char does not fill full width
 				$this->y = $y + $paddingT; 
 				$this->Cell($cw*($outerfontsize/3), $num_height, '>', 0, 0, 'R');
@@ -31239,8 +31238,8 @@ function WriteBarcode2($code, $x='', $y='', $size=1, $height=1, $bgcol=false, $c
 			if (($s_x == 0) OR ($s_y == 0)) {
 				$this->Error('Please do not use values equal to zero for scaling');
 			}
-			$y = ($this->h - $y) * $this->k;
-			$x *= $this->k;
+			$y = ($this->h - $y) * MPDF_K;
+			$x *= MPDF_K;
 			//calculate elements of transformation matrix
 			$s_x /= 100;
 			$s_y /= 100;
@@ -31261,8 +31260,8 @@ function WriteBarcode2($code, $x='', $y='', $size=1, $height=1, $bgcol=false, $c
 			$tm[1] = 0;
 			$tm[2] = 0;
 			$tm[3] = 1;
-			$tm[4] = $t_x * $this->k;
-			$tm[5] = -$t_y * $this->k;
+			$tm[4] = $t_x * MPDF_K;
+			$tm[5] = -$t_y * MPDF_K;
 			//translate the coordinate system
 			if ($returnstring) { return($this->_transform($tm, true)); }
 			else { $this->_transform($tm); }
@@ -31276,8 +31275,8 @@ function WriteBarcode2($code, $x='', $y='', $size=1, $height=1, $bgcol=false, $c
 				$y=$this->y;
 			}
 			$angle = -$angle;
-			$y = ($this->h - $y) * $this->k;
-			$x *= $this->k;
+			$y = ($this->h - $y) * MPDF_K;
+			$x *= MPDF_K;
 			//calculate elements of transformation matrix
 			$tm[0] = cos(deg2rad($angle));
 			$tm[1] = sin(deg2rad($angle));
@@ -32667,8 +32666,8 @@ function ImportPage($pageno=1, $crop_x=null, $crop_y=null, $crop_w=0, $crop_h=0,
 			$x = $tpl['w'];
 			$y = $tpl['h'];
 		}
-		$cx=($x/2+$tpl['box']['x'])*$this->k;
-		$cy=($y/2+$tpl['box']['y'])*$this->k;
+		$cx=($x/2+$tpl['box']['x'])*MPDF_K;
+		$cy=($y/2+$tpl['box']['y'])*MPDF_K;
 		$angle*=-1; 
 		$angle*=M_PI/180;
 		$c=cos($angle);
@@ -32696,7 +32695,7 @@ function UseTemplate($tplidx, $_x=null, $_y=null, $_w=0, $_h=0) {
 	$wh = $this->getTemplateSize($tplidx,$_w,$_h);
 	$_w = $wh['w'];
 	$_h = $wh['h'];
-	$out .= sprintf("q %.4f 0 0 %.4f %.2f %.2f cm", ($_w/$this->tpls[$tplidx]['box']['w']), ($_h/$this->tpls[$tplidx]['box']['h']), $_x*$this->k, ($this->h-($_y+$_h))*$this->k)."\n"; 
+	$out .= sprintf("q %.4f 0 0 %.4f %.2f %.2f cm", ($_w/$this->tpls[$tplidx]['box']['w']), ($_h/$this->tpls[$tplidx]['box']['h']), $_x*MPDF_K, ($this->h-($_y+$_h))*MPDF_K)."\n"; 
 	$out .= $this->tplprefix.$tplidx." Do Q\n";
 
 	$s = array("w" => $_w, "h" => $_h);
@@ -33183,10 +33182,10 @@ function _setflag( $array ) {
 }
 
 function _form_rect( $x, $y, $w, $h, $hPt ) {
-	$x = $x * $this->k;
-	$y = $hPt - ($y  * $this->k);
-	$x2 = $x + ($w * $this->k);
-	$y2 = $y - ($h * $this->k);
+	$x = $x * MPDF_K;
+	$y = $hPt - ($y  * MPDF_K);
+	$x2 = $x + ($w * MPDF_K);
+	$y2 = $y - ($h * MPDF_K);
 	$rect = sprintf('%.3f %.3f %.3f %.3f', $x, $y2, $x2, $y );
 	return $rect;
 }
