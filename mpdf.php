@@ -1338,7 +1338,7 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	  else { $default_font = $this->defaultCSS['BODY']['FONT-FAMILY']; }
 	}
 	if (!$default_font_size) { 
-		$mmsize = $this->ConvertSize($this->defaultCSS['BODY']['FONT-SIZE']);
+		$mmsize = Numeric::convertSize($this->defaultCSS['BODY']['FONT-SIZE'],$this->dpi);
 		$default_font_size = $mmsize*(MPDF_K);
 	}
 
@@ -1962,8 +1962,8 @@ function SetBackground(&$properties, &$maxwidth) {
 				$ppos = preg_split('/\s+/',$properties['BACKGROUND-POSITION']);
 				$x_pos = $ppos[0];
 				$y_pos = $ppos[1];
-				if (!stristr($x_pos ,'%') ) { $x_pos = $this->ConvertSize($x_pos ,$maxwidth,$this->FontSize); }
-				if (!stristr($y_pos ,'%') ) { $y_pos = $this->ConvertSize($y_pos ,$maxwidth,$this->FontSize); }
+				if (!stristr($x_pos ,'%') ) { $x_pos = Numeric::convertSize($x_pos,$this->dpi ,$maxwidth,$this->FontSize); }
+				if (!stristr($y_pos ,'%') ) { $y_pos = Numeric::convertSize($y_pos,$this->dpi ,$maxwidth,$this->FontSize); }
 			}
 			if (isset($properties['BACKGROUND-IMAGE-RESIZE'])) { $resize = $properties['BACKGROUND-IMAGE-RESIZE']; }
 			else { $resize = 0; }
@@ -4278,12 +4278,12 @@ function restoreInlineProperties( &$saved) {
    $this->kerning = $saved[ 'fontkerning' ];
    $this->lSpacingCSS = $saved[ 'lSpacingCSS' ];
    if (($this->lSpacingCSS || $this->lSpacingCSS==='0') && strtoupper($this->lSpacingCSS) != 'NORMAL') {
-	$this->fixedlSpacing = $this->ConvertSize($this->lSpacingCSS,$this->FontSize);
+	$this->fixedlSpacing = Numeric::convertSize($this->lSpacingCSS,$this->dpi,$this->FontSize);
    }
    else { $this->fixedlSpacing = false; }
    $this->wSpacingCSS = $saved[ 'wSpacingCSS' ];
    if ($this->wSpacingCSS && strtoupper($this->wSpacingCSS) != 'NORMAL') { 
-	$this->minwSpacing = $this->ConvertSize($this->wSpacingCSS,$this->FontSize);
+	$this->minwSpacing = Numeric::convertSize($this->wSpacingCSS,$this->dpi,$this->FontSize);
    }
    else { $this->minwSpacing = 0; }
   
@@ -4734,7 +4734,7 @@ function finishFlowingBlock($endofblock=false, $next='') {
 	// ADDED for Paragraph_indent
 	$WidthCorrection = 0;
 	if (($newblock) && ($blockstate==1 || $blockstate==3) && isset($this->blk[$this->blklvl]['text_indent']) && ($lineCount == 0) && (!$is_table) && (!$is_list) && ($align != 'C')) { 
-		$ti = $this->ConvertSize($this->blk[$this->blklvl]['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+		$ti = Numeric::convertSize($this->blk[$this->blklvl]['text_indent'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		$WidthCorrection = ($ti*MPDF_K); 
 	} 
 
@@ -4862,7 +4862,7 @@ function finishFlowingBlock($endofblock=false, $next='') {
 		// Paragraph INDENT
 		$WidthCorrection = 0; 
 		if (($newblock) && ($blockstate==1 || $blockstate==3) && isset($this->blk[$this->blklvl]['text_indent']) && ($lineCount == 0) && (!$is_table) && (!$is_list) && ($align !='C')) { 
-			$ti = $this->ConvertSize($this->blk[$this->blklvl]['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$ti = Numeric::convertSize($this->blk[$this->blklvl]['text_indent'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 			$this->x += $ti; 
 		}
 
@@ -5776,7 +5776,7 @@ function WriteFlowingBlock( $s)
 	// ADDED for Paragraph_indent
 	$WidthCorrection = 0; 
 	if (($newblock) && ($blockstate==1 || $blockstate==3) && isset($this->blk[$this->blklvl]['text_indent']) && ($lineCount == 0) && (!$is_table) && (!$is_list) && ($align != 'C')) { 
-		$ti = $this->ConvertSize($this->blk[$this->blklvl]['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+		$ti = Numeric::convertSize($this->blk[$this->blklvl]['text_indent'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		$WidthCorrection = ($ti*MPDF_K); 
 	} 
 
@@ -5932,7 +5932,7 @@ function WriteFlowingBlock( $s)
 		}
 		else {	// otherwise, we need to find which bit to cut off
              $lastContent = '';
-              for ( $w = 0; $w < count( $words ) - 1; $w++) { $lastContent .= $words[ $w ]." "; }
+              for ($w=0, $wlen = count($words)-1; $w<$wlen; $w++) { $lastContent .= $words[ $w ]." "; }
               $savedContent = $words[ count( $words ) - 1 ];
               $savedFont = $this->saveFont();
               // replace the current content with the cropped version
@@ -6225,7 +6225,7 @@ function WriteFlowingBlock( $s)
 
 		// Paragraph INDENT
 		if (isset($this->blk[$this->blklvl]['text_indent']) && ($newblock) && ($blockstate==1 || $blockstate==3) && ($lineCount == 1) && (!$is_table) && ($blockdir !='rtl') && ($align !='C')) { 
-			$ti = $this->ConvertSize($this->blk[$this->blklvl]['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$ti = Numeric::convertSize($this->blk[$this->blklvl]['text_indent'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 			$this->x += $ti; 
 		}
 
@@ -7570,7 +7570,7 @@ function _putpages()
 			if (!$this->onlyCoreFonts) { $r = $this->UTF8ToUTF16BE($nb, false); }
 			else { $r = $nb; }
 			if (preg_match_all('/{mpdfheadernbpg (C|R) ff=(\S*) fs=(\S*) fz=(.*?)}/',$this->pages[$n],$m)) {
-				for($hi=0;$hi<count($m[0]);$hi++) {
+				for($hi=0, $mlen=count($m[0]);$hi<$mlen;$hi++) {
 					$pos = $m[1][$hi];
 					$hff = $m[2][$hi];
 					$hfst = $m[3][$hi];
@@ -7589,7 +7589,7 @@ function _putpages()
 			// And now for any SMP/SIP fonts subset using <HH> format
 			$r = '';
 			$nstr = "$nb";
-			for($i=0;$i<strlen($nstr);$i++) {
+			for($i=0,$len=strlen($nstr);$i<$len;$i++) {
 				$r .= sprintf("%02s", strtoupper(dechex(intval($nstr[$i])+48))); 
 			}
 			$this->pages[$n]=str_replace($this->aliasNbPgHex,$r,$this->pages[$n]);
@@ -7603,7 +7603,7 @@ function _putpages()
 			if (!$this->onlyCoreFonts) { $r = $this->UTF8ToUTF16BE($nbt, false); }
 			else { $r = $nbt; }
 			if (preg_match_all('/{mpdfheadernbpggp (C|R) ff=(\S*) fs=(\S*) fz=(.*?)}/',$this->pages[$n],$m)) {
-				for($hi=0;$hi<count($m[0]);$hi++) {
+				for($hi=0, $mlen=count($m[0]);$hi<$mlen;$hi++) {
 					$pos = $m[1][$hi];
 					$hff = $m[2][$hi];
 					$hfst = $m[3][$hi];
@@ -7622,7 +7622,7 @@ function _putpages()
 			// And now for any SMP/SIP fonts subset using <HH> format
 			$r = '';
 			$nstr = "$nbt";
-			for($i=0;$i<strlen($nstr);$i++) {
+			for($i=0, $nlen=strlen($nstr);$i<$nlen;$i++) {
 				$r .= sprintf("%02s", strtoupper(dechex(intval($nstr[$i])+48))); 
 			}
 			$this->pages[$n]=str_replace($this->aliasNbPgGpHex,$r,$this->pages[$n]);
@@ -8179,7 +8179,7 @@ function _putfonts() {
 		   $ssfaid="AA";
 		   if (!class_exists('TTFontFile', false)) { include(_MPDF_PATH .'classes/ttfontsuni.php'); }
 		   $ttf = new TTFontFile();
-		   for($sfid=0;$sfid<count($font['subsetfontids']);$sfid++) {
+		   for($sfid=0, $sflen=count($font['subsetfontids']);$sfid<$sflen; $sfid++) {
 			$this->fonts[$k]['n'][$sfid]=$this->n+1;		// NB an array for subset
 			$subsetname = 'MPDF'.$ssfaid.'+'.$font['name'];
 			$ssfaid++;
@@ -8715,7 +8715,7 @@ function _putimages()
 		if(isset($info['parms'])) { $this->_out($info['parms']); }
 		if(isset($info['trns']) and is_array($info['trns'])) {
 			$trns='';
-			for($i=0;$i<count($info['trns']);$i++)
+			for($i=0, $len=count($info['trns']); $i<$len; $i++)
 				$trns.=$info['trns'][$i].' '.$info['trns'][$i].' ';
 			$this->_out('/Mask ['.$trns.']');
 		}
@@ -10928,11 +10928,11 @@ function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coo
 	$useh = $bboxh;
 	if ($type < 1) { $type = 2; }
 	if ($coords[0]!==false && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$coords[0],$m)) { 
-		$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+		$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 		if ($tmp) { $coords[0] = $tmp/$w; }
 	}
 	if ($coords[1]!==false && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$coords[1],$m)) { 
-		$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+		$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 		if ($tmp) { $coords[1] = 1-($tmp/$h); }
 	}
 	// LINEAR
@@ -11157,9 +11157,9 @@ function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coo
 	}
 	else { $axis_length = $coords[4]*$usew; }	// Absolute lengths are meaningless for an ellipse - Firefox uses Width as reference
 
-	for($i=0;$i<count($stops);$i++) {
+	for($i=0, $stoplen=count($stops); $i<$stoplen; $i++) {
 	  if (isset($stops[$i]['offset']) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$stops[$i]['offset'],$m)) { 
-		$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+		$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 		$stops[$i]['offset'] = $tmp/$axis_length;
 	  }
 	}
@@ -11280,7 +11280,7 @@ function Shaded_box( $text,$font='',$fontstyle='B',$szfont='',$width='70%',$styl
 	// Font-specific ligature substitution for Indic fonts
 	if (isset($this->CurrentFont['indic']) && $this->CurrentFont['indic']) $this->ConvertIndic($text);	// *INDIC*
 	$text = ' '.$text.' ';
-	if (!$width) { $width = $this->pgwidth; } else { $width=$this->ConvertSize($width,$this->pgwidth); }
+	if (!$width) { $width = $this->pgwidth; } else { $width=Numeric::convertSize($width,$this->dpi,$this->pgwidth); }
 	$midpt = $this->lMargin+($this->pgwidth/2);
 	$r1  = $midpt-($width/2);	//($this->w / 2) - 40;
 	$r2  = $r1 + $width; 		//$r1 + 80;
@@ -11317,30 +11317,44 @@ function Shaded_box( $text,$font='',$fontstyle='B',$szfont='',$width='70%',$styl
 
 
 function UTF8StringToArray($str, $addSubset=true) {
-   $out = array();
-   $len = strlen($str);
-   global $ords;
-   for ($i = 0; $i < $len; $i++) {
-	$uni = -1;
-      $h = $ords[$str[$i]];
-      if ( $h <= 0x7F )
-         $uni = $h;
-      elseif ( $h >= 0xC2 ) {
-         if ( ($h <= 0xDF) && ($i < $len -1) )
-            $uni = ($h & 0x1F) << 6 | ($ords[$str[++$i]] & 0x3F);
-         elseif ( ($h <= 0xEF) && ($i < $len -2) )
-            $uni = ($h & 0x0F) << 12 | ($ords[$str[++$i]] & 0x3F) << 6 | ($ords[$str[++$i]] & 0x3F);
-         elseif ( ($h <= 0xF4) && ($i < $len -3) )
-            $uni = ($h & 0x0F) << 18 | ($ords[$str[++$i]] & 0x3F) << 12 | ($ords[$str[++$i]] & 0x3F) << 6 | ($ords[$str[++$i]] & 0x3F);
-      }
-	if ($uni >= 0) {
-		$out[] = $uni;
+	$out = array();
+	global $ords;
+	
+	static $cache = array();
+	if (isset($cache[$str])) {
 		if ($addSubset && isset($this->CurrentFont['subset'])) {
-			$this->CurrentFont['subset'][$uni] = $uni;
+			foreach($cache[$str] as $uni) {
+				$this->CurrentFont['subset'][$uni] = $uni;
+			}
+		}
+		return $cache[$str];
+	}
+	
+	for ($i=0, $len = strlen($str); $i<$len; $i++) {
+		$uni = -1;
+		$h = $ords[$str[$i]];
+		if ( $h <= 0x7F )
+			$uni = $h;
+		elseif ( $h >= 0xC2 ) {
+			if ( ($h <= 0xDF) && ($i < $len -1) )
+				$uni = ($h & 0x1F) << 6 | ($ords[$str[++$i]] & 0x3F);
+			elseif ( ($h <= 0xEF) && ($i < $len -2) )
+				$uni = ($h & 0x0F) << 12 | ($ords[$str[++$i]] & 0x3F) << 6 | ($ords[$str[++$i]] & 0x3F);
+			elseif ( ($h <= 0xF4) && ($i < $len -3) )
+				$uni = ($h & 0x0F) << 18 | ($ords[$str[++$i]] & 0x3F) << 12 | ($ords[$str[++$i]] & 0x3F) << 6 | ($ords[$str[++$i]] & 0x3F);
+		}
+		
+		if ($uni >= 0) {
+			$out[] = $uni;
+			if ($addSubset && isset($this->CurrentFont['subset'])) {
+				$this->CurrentFont['subset'][$uni] = $uni;
+			}
 		}
 	}
-   }
-   return $out;
+	
+	$cache[$str] = $out;
+	
+	return $out;
 }
 
 //Convert utf-8 string to <HHHHHH> for Font Subsets
@@ -13234,7 +13248,7 @@ function hyphenateWord($word, $maxWidth) {
 		include(_MPDF_PATH."patterns/" . $this->SHYlang . ".php"); 
 		$patterns = explode(' ', $patterns);
 		$new_patterns = array();
-		for($i = 0; $i < count($patterns); $i++) {
+		for($i=0, $patlen=count($patterns); $i<$patlen; $i++) {
 			$value = $patterns[$i];
 			$new_patterns[preg_replace('/[0-9]/', '', $value)] = $value;
 		}
@@ -13305,7 +13319,7 @@ function hyphenateWord($word, $maxWidth) {
 		}
 	   }
 
-	   for($i = $this->SHYleftmin; $i <= (mb_strlen($word,'UTF-8') - $this->SHYrightmin); $i++) {
+	   for($i=$this->SHYleftmin, $wlen=mb_strlen($word,'UTF-8')-$this->SHYrightmin; $i<=$wlen; $i++) {
 		if(isset($hyphenated_word[$i]) && $hyphenated_word[$i] % 2 != 0) {
 			$a = $prepre . mb_substr($word,0,$i,'UTF-8');
 			if ($this->usingCoreFont) { $testa = mb_convert_encoding($a,$this->mb_enc,'UTF-8'); }
@@ -13491,14 +13505,14 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 
 /*-- HTMLHEADERS-FOOTERS --*/
 	preg_match_all('/<htmlpageheader([^>]*)>(.*?)<\/htmlpageheader>/si',$html,$h);
-	for($i=0;$i<count($h[1]);$i++) {
+	for($i=0, $hlen=count($h[1]); $i<$hlen; $i++) {
 		if (preg_match('/name=[\'|\"](.*?)[\'|\"]/',$h[1][$i],$n)) {
 			$this->pageHTMLheaders[$n[1]]['html'] = $h[2][$i]; 
 			$this->pageHTMLheaders[$n[1]]['h'] = $this->_gethtmlheight($h[2][$i]); 
 		}
 	}
 	preg_match_all('/<htmlpagefooter([^>]*)>(.*?)<\/htmlpagefooter>/si',$html,$f);
-	for($i=0;$i<count($f[1]);$i++) {
+	for($i=0, $flen=count($f[1]); $i<$flen; $i++) {
 		if (preg_match('/name=[\'|\"](.*?)[\'|\"]/',$f[1][$i],$n)) {
 			$this->pageHTMLfooters[$n[1]]['html'] = $f[2][$i]; 
 			$this->pageHTMLfooters[$n[1]]['h'] = $this->_gethtmlheight($f[2][$i]); 
@@ -14045,17 +14059,17 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 		if (strtolower($p['MARGIN-TOP'])=='auto') { $bbox_mt = 'auto'; }
 		$bbox_mb = $this->blk[1]['margin_bottom'];
  		if (strtolower($p['MARGIN-BOTTOM'])=='auto') { $bbox_mb = 'auto'; }
-		if (isset($p['LEFT']) && strtolower($p['LEFT'])!='auto') { $bbox_left = $this->ConvertSize($p['LEFT'], $cont_w, $this->FontSize,false); }
+		if (isset($p['LEFT']) && strtolower($p['LEFT'])!='auto') { $bbox_left = Numeric::convertSize($p['LEFT'],$this->dpi, $cont_w, $this->FontSize,false); }
 		else { $bbox_left = 'auto'; }
- 		if (isset($p['TOP']) && strtolower($p['TOP'])!='auto') { $bbox_top = $this->ConvertSize($p['TOP'], $cont_h, $this->FontSize,false); }
+ 		if (isset($p['TOP']) && strtolower($p['TOP'])!='auto') { $bbox_top = Numeric::convertSize($p['TOP'],$this->dpi, $cont_h, $this->FontSize,false); }
 		else { $bbox_top = 'auto'; }
- 		if (isset($p['RIGHT']) && strtolower($p['RIGHT'])!='auto') { $bbox_right = $this->ConvertSize($p['RIGHT'], $cont_w, $this->FontSize,false); }
+ 		if (isset($p['RIGHT']) && strtolower($p['RIGHT'])!='auto') { $bbox_right = Numeric::convertSize($p['RIGHT'],$this->dpi, $cont_w, $this->FontSize,false); }
 		else { $bbox_right = 'auto'; }
- 		if (isset($p['BOTTOM']) && strtolower($p['BOTTOM'])!='auto') { $bbox_bottom = $this->ConvertSize($p['BOTTOM'], $cont_h, $this->FontSize,false); }
+ 		if (isset($p['BOTTOM']) && strtolower($p['BOTTOM'])!='auto') { $bbox_bottom = Numeric::convertSize($p['BOTTOM'],$this->dpi, $cont_h, $this->FontSize,false); }
 		else { $bbox_bottom = 'auto'; }
- 		if (isset($p['WIDTH']) && strtolower($p['WIDTH'])!='auto') { $inner_w = $this->ConvertSize($p['WIDTH'], $cont_w, $this->FontSize,false); }
+ 		if (isset($p['WIDTH']) && strtolower($p['WIDTH'])!='auto') { $inner_w = Numeric::convertSize($p['WIDTH'],$this->dpi, $cont_w, $this->FontSize,false); }
 		else { $inner_w = 'auto'; }
- 		if (isset($p['HEIGHT']) && strtolower($p['HEIGHT'])!='auto') { $inner_h = $this->ConvertSize($p['HEIGHT'], $cont_h, $this->FontSize,false); }
+ 		if (isset($p['HEIGHT']) && strtolower($p['HEIGHT'])!='auto') { $inner_h = Numeric::convertSize($p['HEIGHT'],$this->dpi, $cont_h, $this->FontSize,false); }
 		else { $inner_h = 'auto'; }
 
 		// If bottom or right pos are set and not left / top - save this to adjust rotated block later
@@ -14595,7 +14609,7 @@ function border_details($bd) {
 	else if (isset($this->blk[$this->blklvl-1]['inner_width'])) { $refw = $this->blk[$this->blklvl-1]['inner_width']; }
 	else { $refw = $this->w; }
 	if ( count($prop) == 1 ) { 
-		$bsize = $this->ConvertSize($prop[0],$refw,$this->FontSize,false);
+		$bsize = Numeric::convertSize($prop[0],$this->dpi,$refw,$this->FontSize,false);
 		if ($bsize > 0) {
 			return array('s' => 1, 'w' => $bsize, 'c' => $this->ConvertColor(0), 'style'=>'solid');
 		}
@@ -14622,7 +14636,7 @@ function border_details($bd) {
 	}
 	else { return array(); } 
 	// Size
-	$bsize = $this->ConvertSize($prop[0],$refw,$this->FontSize,false);
+	$bsize = Numeric::convertSize($prop[0],$this->dpi,$refw,$this->FontSize,false);
 	//color
 	$coul = $this->ConvertColor($prop[2]);	// returns array
 	// Style
@@ -14834,18 +14848,18 @@ function fixCSS($prop) {
 				$newprop['SIZE'] = strtoupper($prop[0]);
 			}
 			else if (count($prop) == 1 ) {
-				$newprop['SIZE']['W'] = $this->ConvertSize($prop[0]);
-				$newprop['SIZE']['H'] = $this->ConvertSize($prop[0]);
+				$newprop['SIZE']['W'] = Numeric::convertSize($prop[0],$this->dpi);
+				$newprop['SIZE']['H'] = Numeric::convertSize($prop[0],$this->dpi);
 			}
 			else if (count($prop) == 2 ) {
-				$newprop['SIZE']['W'] = $this->ConvertSize($prop[0]);
-				$newprop['SIZE']['H'] = $this->ConvertSize($prop[1]);
+				$newprop['SIZE']['W'] = Numeric::convertSize($prop[0],$this->dpi);
+				$newprop['SIZE']['H'] = Numeric::convertSize($prop[1],$this->dpi);
 			}
 		}
 		else if ($k == 'SHEET-SIZE') {
 			$prop = preg_split('/\s+/',trim($v));
 			if (count($prop) == 2 ) {
-				$newprop['SHEET-SIZE'] = array($this->ConvertSize($prop[0]), $this->ConvertSize($prop[1]));
+				$newprop['SHEET-SIZE'] = array(Numeric::convertSize($prop[0],$this->dpi), Numeric::convertSize($prop[1],$this->dpi));
 			}
 			else {
 				if(preg_match('/([0-9a-zA-Z]*)-L/i',$v,$m)) {	// e.g. A4-L = A$ landscape
@@ -15009,7 +15023,7 @@ function parseMozGradient($bg) {
 	// Remove spaces inside e.g. rgb(x, x, x)
 	while(preg_match('/(\([^\)]*?)[ ]/',$v)) { $v = preg_replace('/(\([^\)]*?)[ ]/','\\1',$v); }
 	$bgr = preg_split('/\s*,\s*/',$v);
-	for($i=0;$i<count($bgr);$i++) { $bgr[$i] = preg_replace('/@/', ',', $bgr[$i]); }
+	for($i=0, $bgrlen=count($bgr); $i<$bgrlen; $i++) { $bgr[$i] = preg_replace('/@/', ',', $bgr[$i]); }
 	// Is first part $bgr[0] a valid point/angle?
 	$first = preg_split('/\s+/',trim($bgr[0]));
 	if (preg_match('/(left|center|right|bottom|top|deg|grad|rad)/i',$bgr[0]) && !preg_match('/(<#|rgb|rgba|hsl|hsla)/i',$bgr[0])) {
@@ -15042,12 +15056,12 @@ function parseMozGradient($bg) {
 		// Check for %? ?% or %%
 		if (preg_match('/(\d+)[%]/i',$first[0],$m)) { $startx = $m[1]/100; }
 		else if (!isset($startx) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[0],$m)) { 
-			$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 			if ($tmp) { $startx = $m[1]; }
 		}
 		if (isset($first[1]) && preg_match('/(\d+)[%]/i',$first[1],$m)) { $starty = 1 - ($m[1]/100); }
 		else if (!isset($starty) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[1],$m)) { 
-			$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 			if ($tmp) { $starty = $m[1]; }
 		}
 		if (isset($startx) && !isset($starty)) { $starty = 0.5; }
@@ -15067,7 +15081,7 @@ function parseMozGradient($bg) {
 	if (!isset($angle)) { $angle = false; }
 	$g['coords'] = array($startx ,$starty ,$endx ,$endy, $angle, $repeat );
 	$g['stops'] = array();
-	for($i=$startStops;$i<count($bgr);$i++) {
+	for($i=$startStops, $bgrlen=count($bgr); $i<$bgrlen; $i++) {
 		$stop = array();
 		// parse stops
 		$el = preg_split('/\s+/',trim($bgr[$i]));
@@ -15084,7 +15098,7 @@ function parseMozGradient($bg) {
 			if ($stop['offset']>1) { unset($stop['offset']); }
 		}
 		else if (isset($el[1]) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$el[1],$m)) { 
-			$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 			if ($tmp) { $stop['offset'] = $m[1]; }
 		}
 		$g['stops'][] = $stop;
@@ -15141,12 +15155,12 @@ function parseMozGradient($bg) {
 		// Check for %? ?% or %%
 		if (preg_match('/(\d+)[%]/i',$first[0],$m)) { $startx = $m[1]/100; }
 		else if (!isset($startx) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[0],$m)) { 
-			$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 			if ($tmp) { $startx = $m[1]; }
 		}
 		if (isset($first[1]) && preg_match('/(\d+)[%]/i',$first[1],$m)) { $starty = 1 - ($m[1]/100); }
 		else if (!isset($starty) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[1],$m)) { 
-			$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 			if ($tmp) { $starty = $m[1]; }
 		}
 
@@ -15212,7 +15226,7 @@ function parseMozGradient($bg) {
 			if ($stop['offset']>1) { unset($stop['offset']); }
 		}
 		else if (isset($el[1]) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$el[1],$m)) { 
-			$tmp = $this->ConvertSize($m[1],$this->w,$this->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->dpi,$this->w,$this->FontSize,false);
 			$stop['offset'] = $el[1];
 		}
 		$g['stops'][] = $stop;
@@ -15370,7 +15384,7 @@ function fixLineheight($v) {
 		return $this->normalLineheight; 
 	}
 	else { 
-		$tlh = $this->ConvertSize($v,$this->FontSize,$this->FontSize,true); 
+		$tlh = Numeric::convertSize($v,$this->dpi,$this->FontSize,$this->FontSize,true); 
 		if ($tlh) { return ($tlh.'mm'); }
 	}
 	return $this->normalLineheight;
@@ -16076,12 +16090,12 @@ function SetPagedMediaCSS($name='', $first, $oddEven) {
 	if (isset($p['BACKGROUND-IMAGE-OPACITY']) && $p['BACKGROUND-IMAGE-OPACITY']) { $bg['BACKGROUND-IMAGE-OPACITY'] = $p['BACKGROUND-IMAGE-OPACITY']; }
 /*-- END BACKGROUNDS --*/
 
-	if (isset($p['MARGIN-LEFT'])) { $mgl = $this->ConvertSize($p['MARGIN-LEFT'],$pgw) + $outer_width_LR; }
-	if (isset($p['MARGIN-RIGHT'])) { $mgr = $this->ConvertSize($p['MARGIN-RIGHT'],$pgw) + $outer_width_LR; }
-	if (isset($p['MARGIN-BOTTOM'])) { $mgb = $this->ConvertSize($p['MARGIN-BOTTOM'],$pgh) + $outer_width_TB; }
-	if (isset($p['MARGIN-TOP'])) { $mgt = $this->ConvertSize($p['MARGIN-TOP'],$pgh) + $outer_width_TB; }
-	if (isset($p['MARGIN-HEADER'])) { $mgh = $this->ConvertSize($p['MARGIN-HEADER'],$pgh) + $outer_width_TB; }
-	if (isset($p['MARGIN-FOOTER'])) { $mgf = $this->ConvertSize($p['MARGIN-FOOTER'],$pgh) + $outer_width_TB; }
+	if (isset($p['MARGIN-LEFT'])) { $mgl = Numeric::convertSize($p['MARGIN-LEFT'],$this->dpi,$pgw) + $outer_width_LR; }
+	if (isset($p['MARGIN-RIGHT'])) { $mgr = Numeric::convertSize($p['MARGIN-RIGHT'],$this->dpi,$pgw) + $outer_width_LR; }
+	if (isset($p['MARGIN-BOTTOM'])) { $mgb = Numeric::convertSize($p['MARGIN-BOTTOM'],$this->dpi,$pgh) + $outer_width_TB; }
+	if (isset($p['MARGIN-TOP'])) { $mgt = Numeric::convertSize($p['MARGIN-TOP'],$this->dpi,$pgh) + $outer_width_TB; }
+	if (isset($p['MARGIN-HEADER'])) { $mgh = Numeric::convertSize($p['MARGIN-HEADER'],$this->dpi,$pgh) + $outer_width_TB; }
+	if (isset($p['MARGIN-FOOTER'])) { $mgf = Numeric::convertSize($p['MARGIN-FOOTER'],$this->dpi,$pgh) + $outer_width_TB; }
 
 	if (isset($p['ORIENTATION']) && $p['ORIENTATION']) { $orientation = $p['ORIENTATION']; }
 	$this->page_box['outer_width_LR'] = $outer_width_LR;	// Used in MARKS:crop etc.
@@ -16330,9 +16344,9 @@ function OpenTag($tag,$attr)
 				$p['R']['font-family'] = $properties['FONT-FAMILY']; 
 			}
 			if (isset($properties['FONT-SIZE'])) { 
-				$p['L']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; 
-				$p['C']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; 
-				$p['R']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; 
+				$p['L']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; 
+				$p['C']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; 
+				$p['R']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; 
 			}
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { 
 				$p['L']['font-style'] = 'B'; 
@@ -16354,7 +16368,7 @@ function OpenTag($tag,$attr)
 			if ($tag=='PAGEHEADER') { $properties = $this->readInlineCSS($attr['HEADER-STYLE-LEFT']); }
 			else { $properties = $this->readInlineCSS($attr['FOOTER-STYLE-LEFT']); }
 			if (isset($properties['FONT-FAMILY'])) { $p['L']['font-family'] = $properties['FONT-FAMILY']; }
-			if (isset($properties['FONT-SIZE'])) { $p['L']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; }
+			if (isset($properties['FONT-SIZE'])) { $p['L']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; }
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { $p['L']['font-style'] ='B'; }
 			if (isset($properties['FONT-STYLE']) && $properties['FONT-STYLE']=='ITALIC') { $p['L']['font-style'] .='I'; }
 			if (isset($properties['COLOR'])) { $p['L']['color'] = $properties['COLOR']; }
@@ -16363,7 +16377,7 @@ function OpenTag($tag,$attr)
 			if ($tag=='PAGEHEADER') { $properties = $this->readInlineCSS($attr['HEADER-STYLE-CENTER']); }
 			else { $properties = $this->readInlineCSS($attr['FOOTER-STYLE-CENTER']); }
 			if (isset($properties['FONT-FAMILY'])) { $p['C']['font-family'] = $properties['FONT-FAMILY']; }
-			if (isset($properties['FONT-SIZE'])) { $p['C']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; }
+			if (isset($properties['FONT-SIZE'])) { $p['C']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; }
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { $p['C']['font-style'] = 'B'; }
 			if (isset($properties['FONT-STYLE']) && $properties['FONT-STYLE']=='ITALIC') { $p['C']['font-style'] .= 'I'; }
 			if (isset($properties['COLOR'])) { $p['C']['color'] = $properties['COLOR']; }
@@ -16372,7 +16386,7 @@ function OpenTag($tag,$attr)
 			if ($tag=='PAGEHEADER') { $properties = $this->readInlineCSS($attr['HEADER-STYLE-RIGHT']); }
 			else { $properties = $this->readInlineCSS($attr['FOOTER-STYLE-RIGHT']); }
 			if (isset($properties['FONT-FAMILY'])) { $p['R']['font-family'] = $properties['FONT-FAMILY']; }
-			if (isset($properties['FONT-SIZE'])) { $p['R']['font-size'] = $this->ConvertSize($properties['FONT-SIZE']) * MPDF_K; }
+			if (isset($properties['FONT-SIZE'])) { $p['R']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; }
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { $p['R']['font-style'] = 'B'; }
 			if (isset($properties['FONT-STYLE']) && $properties['FONT-STYLE']=='ITALIC') { $p['R']['font-style'] .= 'I'; }
 			if (isset($properties['COLOR'])) { $p['R']['color'] = $properties['COLOR']; }
@@ -16497,12 +16511,12 @@ function OpenTag($tag,$attr)
 	  else { $this->m_TOC[$toc_id]['TOCuseLinking'] = false; }
 
 	  $this->m_TOC[$toc_id]['TOC_margin_left'] = $this->m_TOC[$toc_id]['TOC_margin_right'] = $this->m_TOC[$toc_id]['TOC_margin_top'] = $this->m_TOC[$toc_id]['TOC_margin_bottom'] = $this->m_TOC[$toc_id]['TOC_margin_header'] = $this->m_TOC[$toc_id]['TOC_margin_footer'] = '';
-	  if (isset($attr['TOC-MARGIN-RIGHT'])) { $this->m_TOC[$toc_id]['TOC_margin_right'] = $this->ConvertSize($attr['TOC-MARGIN-RIGHT'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-LEFT'])) { $this->m_TOC[$toc_id]['TOC_margin_left'] = $this->ConvertSize($attr['TOC-MARGIN-LEFT'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-TOP'])) { $this->m_TOC[$toc_id]['TOC_margin_top'] = $this->ConvertSize($attr['TOC-MARGIN-TOP'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-BOTTOM'])) { $this->m_TOC[$toc_id]['TOC_margin_bottom'] = $this->ConvertSize($attr['TOC-MARGIN-BOTTOM'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-HEADER'])) { $this->m_TOC[$toc_id]['TOC_margin_header'] = $this->ConvertSize($attr['TOC-MARGIN-HEADER'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-FOOTER'])) { $this->m_TOC[$toc_id]['TOC_margin_footer'] = $this->ConvertSize($attr['TOC-MARGIN-FOOTER'],$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-RIGHT'])) { $this->m_TOC[$toc_id]['TOC_margin_right'] = Numeric::convertSize($attr['TOC-MARGIN-RIGHT'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-LEFT'])) { $this->m_TOC[$toc_id]['TOC_margin_left'] = Numeric::convertSize($attr['TOC-MARGIN-LEFT'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-TOP'])) { $this->m_TOC[$toc_id]['TOC_margin_top'] = Numeric::convertSize($attr['TOC-MARGIN-TOP'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-BOTTOM'])) { $this->m_TOC[$toc_id]['TOC_margin_bottom'] = Numeric::convertSize($attr['TOC-MARGIN-BOTTOM'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-HEADER'])) { $this->m_TOC[$toc_id]['TOC_margin_header'] = Numeric::convertSize($attr['TOC-MARGIN-HEADER'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-FOOTER'])) { $this->m_TOC[$toc_id]['TOC_margin_footer'] = Numeric::convertSize($attr['TOC-MARGIN-FOOTER'],$this->dpi,$this->w,$this->FontSize,false); }
 	  $this->m_TOC[$toc_id]['TOC_odd_header_name'] = $this->m_TOC[$toc_id]['TOC_even_header_name'] = $this->m_TOC[$toc_id]['TOC_odd_footer_name'] = $this->m_TOC[$toc_id]['TOC_even_footer_name'] = '';
 	  if (isset($attr['TOC-ODD-HEADER-NAME']) && $attr['TOC-ODD-HEADER-NAME']) { $this->m_TOC[$toc_id]['TOC_odd_header_name'] = $attr['TOC-ODD-HEADER-NAME']; }
 	  if (isset($attr['TOC-EVEN-HEADER-NAME']) && $attr['TOC-EVEN-HEADER-NAME']) { $this->m_TOC[$toc_id]['TOC_even_header_name'] = $attr['TOC-EVEN-HEADER-NAME']; }
@@ -16538,12 +16552,12 @@ function OpenTag($tag,$attr)
 	  else { $this->TOCuseLinking = false; }
 
 	  $this->TOC_margin_left = $this->TOC_margin_right = $this->TOC_margin_top = $this->TOC_margin_bottom = $this->TOC_margin_header = $this->TOC_margin_footer = '';
-	  if (isset($attr['TOC-MARGIN-RIGHT'])) { $this->TOC_margin_right = $this->ConvertSize($attr['TOC-MARGIN-RIGHT'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-LEFT'])) { $this->TOC_margin_left = $this->ConvertSize($attr['TOC-MARGIN-LEFT'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-TOP'])) { $this->TOC_margin_top = $this->ConvertSize($attr['TOC-MARGIN-TOP'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-BOTTOM'])) { $this->TOC_margin_bottom = $this->ConvertSize($attr['TOC-MARGIN-BOTTOM'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-HEADER'])) { $this->TOC_margin_header = $this->ConvertSize($attr['TOC-MARGIN-HEADER'],$this->w,$this->FontSize,false); }
-	  if (isset($attr['TOC-MARGIN-FOOTER'])) { $this->TOC_margin_footer = $this->ConvertSize($attr['TOC-MARGIN-FOOTER'],$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-RIGHT'])) { $this->TOC_margin_right = Numeric::convertSize($attr['TOC-MARGIN-RIGHT'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-LEFT'])) { $this->TOC_margin_left = Numeric::convertSize($attr['TOC-MARGIN-LEFT'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-TOP'])) { $this->TOC_margin_top = Numeric::convertSize($attr['TOC-MARGIN-TOP'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-BOTTOM'])) { $this->TOC_margin_bottom = Numeric::convertSize($attr['TOC-MARGIN-BOTTOM'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-HEADER'])) { $this->TOC_margin_header = Numeric::convertSize($attr['TOC-MARGIN-HEADER'],$this->dpi,$this->w,$this->FontSize,false); }
+	  if (isset($attr['TOC-MARGIN-FOOTER'])) { $this->TOC_margin_footer = Numeric::convertSize($attr['TOC-MARGIN-FOOTER'],$this->dpi,$this->w,$this->FontSize,false); }
 	  $this->TOC_odd_header_name = $this->TOC_even_header_name = $this->TOC_odd_footer_name = $this->TOC_even_footer_name = '';
 	  if (isset($attr['TOC-ODD-HEADER-NAME']) && $attr['TOC-ODD-HEADER-NAME']) { $this->TOC_odd_header_name = $attr['TOC-ODD-HEADER-NAME']; }
 	  if (isset($attr['TOC-EVEN-HEADER-NAME']) && $attr['TOC-EVEN-HEADER-NAME']) { $this->TOC_even_header_name = $attr['TOC-EVEN-HEADER-NAME']; }
@@ -16621,7 +16635,7 @@ function OpenTag($tag,$attr)
 		// Convert to same types as accepted in initial mPDF() A4, A4-L, or array(w,h)
 		$prop = preg_split('/\s+/',trim($attr['SHEET-SIZE']));
 		if (count($prop) == 2 ) {
-			$newformat = array($this->ConvertSize($prop[0]), $this->ConvertSize($prop[1]));
+			$newformat = array(Numeric::convertSize($prop[0]),$this->dpi, Numeric::convertSize($prop[1],$this->dpi));
 		}
 		else { $newformat = $attr['SHEET-SIZE']; }
 	}
@@ -16629,12 +16643,12 @@ function OpenTag($tag,$attr)
 
 
 	$mgr = $mgl = $mgt = $mgb = $mgh = $mgf = '';
-	if (isset($attr['MARGIN-RIGHT'])) { $mgr = $this->ConvertSize($attr['MARGIN-RIGHT'],$this->w,$this->FontSize,false); }
-	if (isset($attr['MARGIN-LEFT'])) { $mgl = $this->ConvertSize($attr['MARGIN-LEFT'],$this->w,$this->FontSize,false); }
-	if (isset($attr['MARGIN-TOP'])) { $mgt = $this->ConvertSize($attr['MARGIN-TOP'],$this->w,$this->FontSize,false); }
-	if (isset($attr['MARGIN-BOTTOM'])) { $mgb = $this->ConvertSize($attr['MARGIN-BOTTOM'],$this->w,$this->FontSize,false); }
-	if (isset($attr['MARGIN-HEADER'])) { $mgh = $this->ConvertSize($attr['MARGIN-HEADER'],$this->w,$this->FontSize,false); }
-	if (isset($attr['MARGIN-FOOTER'])) { $mgf = $this->ConvertSize($attr['MARGIN-FOOTER'],$this->w,$this->FontSize,false); }
+	if (isset($attr['MARGIN-RIGHT'])) { $mgr = Numeric::convertSize($attr['MARGIN-RIGHT'],$this->dpi,$this->w,$this->FontSize,false); }
+	if (isset($attr['MARGIN-LEFT'])) { $mgl = Numeric::convertSize($attr['MARGIN-LEFT'],$this->dpi,$this->w,$this->FontSize,false); }
+	if (isset($attr['MARGIN-TOP'])) { $mgt = Numeric::convertSize($attr['MARGIN-TOP'],$this->dpi,$this->w,$this->FontSize,false); }
+	if (isset($attr['MARGIN-BOTTOM'])) { $mgb = Numeric::convertSize($attr['MARGIN-BOTTOM'],$this->dpi,$this->w,$this->FontSize,false); }
+	if (isset($attr['MARGIN-HEADER'])) { $mgh = Numeric::convertSize($attr['MARGIN-HEADER'],$this->dpi,$this->w,$this->FontSize,false); }
+	if (isset($attr['MARGIN-FOOTER'])) { $mgf = Numeric::convertSize($attr['MARGIN-FOOTER'],$this->dpi,$this->w,$this->FontSize,false); }
 	$ohname = $ehname = $ofname = $efname = '';
 	if (isset($attr['ODD-HEADER-NAME'])) { $ohname = $attr['ODD-HEADER-NAME']; }
 	if (isset($attr['EVEN-HEADER-NAME'])) { $ehname = $attr['EVEN-HEADER-NAME']; }
@@ -17267,7 +17281,7 @@ function OpenTag($tag,$attr)
 	if(isset($attr['ALIGN']) && $attr['ALIGN']) { $currblk['block-align'] = $align[strtolower($attr['ALIGN'])]; }
 
 	if (isset($properties['HEIGHT'])) { 
-		$currblk['css_set_height'] = $this->ConvertSize($properties['HEIGHT'],($this->h - $this->tMargin - $this->bMargin),$this->FontSize,false); 
+		$currblk['css_set_height'] = Numeric::convertSize($properties['HEIGHT'],$this->dpi,($this->h - $this->tMargin - $this->bMargin),$this->FontSize,false); 
 		if (($currblk['css_set_height'] + $this->y) > $this->PageBreakTrigger && $this->y > $this->tMargin+5 && $currblk['css_set_height'] < ($this->h - ($this->tMargin + $this->bMargin))) { $this->AddPage($this->CurOrientation); }
 	}
 	else { $currblk['css_set_height'] = false; }
@@ -17438,7 +17452,7 @@ function OpenTag($tag,$attr)
 	// Hanging indent - if negative indent: ensure padding is >= indent
 	if(!isset($currblk['text_indent'])) { $currblk['text_indent'] = null; }
 	if(!isset($currblk['inner_width'])) { $currblk['inner_width'] = null; }
-	$cbti = $this->ConvertSize($currblk['text_indent'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+	$cbti = Numeric::convertSize($currblk['text_indent'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 	if ($cbti < 0) {
 	  $hangind = -($cbti);
 	  if ($currblk['direction'] == 'rtl') {	// *RTL*
@@ -17574,9 +17588,9 @@ function OpenTag($tag,$attr)
 		$objattr['border_left']['w'] = 0;
 		$objattr['border_right']['w'] = 0;
 	$properties = $this->MergeCSS('',$tag,$attr);
-	if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top'] = $this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-	if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = $this->ConvertSize($properties['MARGIN-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-	if (isset($properties['WIDTH'])) { $objattr['width'] = $this->ConvertSize($properties['WIDTH'],$this->blk[$this->blklvl]['inner_width']); }
+	if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top'] = Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+	if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = Numeric::convertSize($properties['MARGIN-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+	if (isset($properties['WIDTH'])) { $objattr['width'] = Numeric::convertSize($properties['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width']); }
 	if (isset($properties['TEXT-ALIGN'])) { $objattr['align'] = $align[strtolower($properties['TEXT-ALIGN'])]; }
 
 	if (isset($properties['MARGIN-LEFT']) && strtolower($properties['MARGIN-LEFT'])=='auto') { 
@@ -17589,9 +17603,9 @@ function OpenTag($tag,$attr)
 		}
 	}
 	if (isset($properties['COLOR'])) { $objattr['color'] = $this->ConvertColor($properties['COLOR']); }
-	if (isset($properties['HEIGHT'])) { $objattr['linewidth'] = $this->ConvertSize($properties['HEIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+	if (isset($properties['HEIGHT'])) { $objattr['linewidth'] = Numeric::convertSize($properties['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
-	if(isset($attr['WIDTH']) && $attr['WIDTH'] != '') $objattr['width'] = $this->ConvertSize($attr['WIDTH'],$this->blk[$this->blklvl]['inner_width']);
+	if(isset($attr['WIDTH']) && $attr['WIDTH'] != '') $objattr['width'] = Numeric::convertSize($attr['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width']);
 	if(isset($attr['ALIGN']) && $attr['ALIGN'] != '') $objattr['align'] = $align[strtolower($attr['ALIGN'])];
 	if(isset($attr['COLOR']) && $attr['COLOR'] != '') $objattr['color'] = $this->ConvertColor($attr['COLOR']);
 
@@ -17683,15 +17697,15 @@ function OpenTag($tag,$attr)
 		if(isset($properties ['DISPLAY']) && strtolower($properties ['DISPLAY'])=='none') { 
 			return; 
 		}
-		if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top']=$this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = $this->ConvertSize($properties['MARGIN-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-LEFT'])) { $objattr['margin_left'] = $this->ConvertSize($properties['MARGIN-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-RIGHT'])) { $objattr['margin_right'] = $this->ConvertSize($properties['MARGIN-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top']=Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = Numeric::convertSize($properties['MARGIN-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-LEFT'])) { $objattr['margin_left'] = Numeric::convertSize($properties['MARGIN-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-RIGHT'])) { $objattr['margin_right'] = Numeric::convertSize($properties['MARGIN-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
-		if (isset($properties['PADDING-TOP'])) { $objattr['padding_top']=$this->ConvertSize($properties['PADDING-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['PADDING-BOTTOM'])) { $objattr['padding_bottom'] = $this->ConvertSize($properties['PADDING-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['PADDING-LEFT'])) { $objattr['padding_left'] = $this->ConvertSize($properties['PADDING-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['PADDING-RIGHT'])) { $objattr['padding_right'] = $this->ConvertSize($properties['PADDING-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-TOP'])) { $objattr['padding_top']=Numeric::convertSize($properties['PADDING-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-BOTTOM'])) { $objattr['padding_bottom'] = Numeric::convertSize($properties['PADDING-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-LEFT'])) { $objattr['padding_left'] = Numeric::convertSize($properties['PADDING-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-RIGHT'])) { $objattr['padding_right'] = Numeric::convertSize($properties['PADDING-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
 		if (isset($properties['BORDER-TOP'])) { $objattr['border_top'] = $this->border_details($properties['BORDER-TOP']); }
 		if (isset($properties['BORDER-BOTTOM'])) { $objattr['border_bottom'] = $this->border_details($properties['BORDER-BOTTOM']); }
@@ -17800,7 +17814,7 @@ function OpenTag($tag,$attr)
 		$this->SetFont($properties['FONT-FAMILY'],$this->FontStyle,0,false);
 	}
 	if (isset($properties['FONT-SIZE'])) { 
-		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
+		$mmsize = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi,$this->default_font_size/MPDF_K);
   		$this->SetFontSize($mmsize*MPDF_K,false);
 	}
 	if (isset($attr['SPELLCHECK']) && strtolower($attr['SPELLCHECK'])=='true') { 	// mPDF 5.2.03
@@ -17876,7 +17890,7 @@ function OpenTag($tag,$attr)
 		$this->SetFont($properties['FONT-FAMILY'],'',0,false);
 	}
 	if (isset($properties['FONT-SIZE'])) { 
-		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
+		$mmsize = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi,$this->default_font_size/MPDF_K);
   		$this->SetFontSize($mmsize*MPDF_K,false);
 	}
 	if (isset($properties['COLOR'])) { $objattr['color'] = $this->ConvertColor($properties['COLOR']); }
@@ -17896,8 +17910,8 @@ function OpenTag($tag,$attr)
 
 	$w = 0;
 	$h = 0;
-	if(isset($properties['WIDTH'])) $w = $this->ConvertSize($properties['WIDTH'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
-	if(isset($properties['HEIGHT'])) $h = $this->ConvertSize($properties['HEIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+	if(isset($properties['WIDTH'])) $w = Numeric::convertSize($properties['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+	if(isset($properties['HEIGHT'])) $h = Numeric::convertSize($properties['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 	if ($properties['VERTICAL-ALIGN']) { $objattr['vertical-align'] = $align[strtolower($properties['VERTICAL-ALIGN'])]; }
 
 	$colsize = 20; //HTML default value 
@@ -17965,7 +17979,7 @@ function OpenTag($tag,$attr)
 		$this->SetFont($properties['FONT-FAMILY'],$this->FontStyle,0,false);
 	}
 	if (isset($properties['FONT-SIZE'])) { 
-		$mmsize = $this->ConvertSize($properties['FONT-SIZE'],($this->default_font_size/MPDF_K));
+		$mmsize = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi,($this->default_font_size/MPDF_K));
   		$this->SetFontSize($mmsize*MPDF_K,false);
 	}
 	if (isset($properties['COLOR'])) { $objattr['color'] = $this->ConvertColor($properties['COLOR']); }
@@ -17987,7 +18001,7 @@ function OpenTag($tag,$attr)
 	$spacesize = $this->GetStringWidth(' ');
 
 	$w = 0;
-	if(isset($properties['WIDTH'])) $w = $this->ConvertSize($properties['WIDTH'],$this->blk[$this->blklvl]['inner_width']);
+	if(isset($properties['WIDTH'])) $w = Numeric::convertSize($properties['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width']);
 
 	if ($properties['VERTICAL-ALIGN']) { $objattr['vertical-align'] = $align[strtolower($properties['VERTICAL-ALIGN'])]; }
 
@@ -18029,10 +18043,10 @@ function OpenTag($tag,$attr)
      		$srcpath = $attr['SRC'];
 		$orig_srcpath = $attr['ORIG_SRC'];
 		// VSPACE and HSPACE converted to margins in MergeCSS
-		if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top']=$this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = $this->ConvertSize($properties['MARGIN-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-LEFT'])) { $objattr['margin_left'] = $this->ConvertSize($properties['MARGIN-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-RIGHT'])) { $objattr['margin_right'] = $this->ConvertSize($properties['MARGIN-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top']=Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = Numeric::convertSize($properties['MARGIN-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-LEFT'])) { $objattr['margin_left'] = Numeric::convertSize($properties['MARGIN-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-RIGHT'])) { $objattr['margin_right'] = Numeric::convertSize($properties['MARGIN-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
 
 		if (isset($properties['BORDER-TOP'])) { $objattr['border_top'] = $this->border_details($properties['BORDER-TOP']); }
@@ -18044,8 +18058,8 @@ function OpenTag($tag,$attr)
 
 		$w = 0;
 		$h = 0;
-		if(isset($properties['WIDTH'])) $w = $this->ConvertSize($properties['WIDTH'],$this->blk[$this->blklvl]['inner_width']);
-		if(isset($properties['HEIGHT'])) $h = $this->ConvertSize($properties['HEIGHT'],$this->blk[$this->blklvl]['inner_width']);
+		if(isset($properties['WIDTH'])) $w = Numeric::convertSize($properties['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width']);
+		if(isset($properties['HEIGHT'])) $h = Numeric::convertSize($properties['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width']);
 
 		$extraheight = $objattr['margin_top'] + $objattr['margin_bottom'] + $objattr['border_top']['w'] + $objattr['border_bottom']['w'];
 		$extrawidth = $objattr['margin_left'] + $objattr['margin_right'] + $objattr['border_left']['w'] + $objattr['border_right']['w'];
@@ -18244,10 +18258,10 @@ function OpenTag($tag,$attr)
 
 
 	if (isset($this->graphs[$gid]['attr']['WIDTH']) && $this->graphs[$gid]['attr']['WIDTH']) { 
-		$this->graphs[$gid]['attr']['cWIDTH']=$this->ConvertSize($this->graphs[$gid]['attr']['WIDTH'],$pgwidth); 
+		$this->graphs[$gid]['attr']['cWIDTH']=Numeric::convertSize($this->graphs[$gid]['attr']['WIDTH'],$this->dpi,$pgwidth); 
 	}	// mm
 	if (isset($this->graphs[$gid]['attr']['HEIGHT']) && $this->graphs[$gid]['attr']['HEIGHT']) { 
-		$this->graphs[$gid]['attr']['cHEIGHT']=$this->ConvertSize($this->graphs[$gid]['attr']['HEIGHT'],$pgwidth); 
+		$this->graphs[$gid]['attr']['cHEIGHT']=Numeric::convertSize($this->graphs[$gid]['attr']['HEIGHT'],$this->dpi,$pgwidth); 
 	}
 
 	$graph_img = print_graph($this->graphs[$gid],$this->blk[$this->blklvl]['inner_width']);
@@ -18292,15 +18306,15 @@ function OpenTag($tag,$attr)
 			return; 
 		}
 		// VSPACE and HSPACE converted to margins in MergeCSS
-		if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top']=$this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = $this->ConvertSize($properties['MARGIN-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-LEFT'])) { $objattr['margin_left'] = $this->ConvertSize($properties['MARGIN-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['MARGIN-RIGHT'])) { $objattr['margin_right'] = $this->ConvertSize($properties['MARGIN-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-TOP'])) { $objattr['margin_top']=Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-BOTTOM'])) { $objattr['margin_bottom'] = Numeric::convertSize($properties['MARGIN-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-LEFT'])) { $objattr['margin_left'] = Numeric::convertSize($properties['MARGIN-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['MARGIN-RIGHT'])) { $objattr['margin_right'] = Numeric::convertSize($properties['MARGIN-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
-		if (isset($properties['PADDING-TOP'])) { $objattr['padding_top']=$this->ConvertSize($properties['PADDING-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['PADDING-BOTTOM'])) { $objattr['padding_bottom'] = $this->ConvertSize($properties['PADDING-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['PADDING-LEFT'])) { $objattr['padding_left'] = $this->ConvertSize($properties['PADDING-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
-		if (isset($properties['PADDING-RIGHT'])) { $objattr['padding_right'] = $this->ConvertSize($properties['PADDING-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-TOP'])) { $objattr['padding_top']=Numeric::convertSize($properties['PADDING-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-BOTTOM'])) { $objattr['padding_bottom'] = Numeric::convertSize($properties['PADDING-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-LEFT'])) { $objattr['padding_left'] = Numeric::convertSize($properties['PADDING-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['PADDING-RIGHT'])) { $objattr['padding_right'] = Numeric::convertSize($properties['PADDING-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
 		if (isset($properties['BORDER-TOP'])) { $objattr['border_top'] = $this->border_details($properties['BORDER-TOP']); }
 		if (isset($properties['BORDER-BOTTOM'])) { $objattr['border_bottom'] = $this->border_details($properties['BORDER-BOTTOM']); }
@@ -18310,11 +18324,11 @@ function OpenTag($tag,$attr)
 		if (isset($properties['VERTICAL-ALIGN'])) { $objattr['vertical-align'] = $align[strtolower($properties['VERTICAL-ALIGN'])]; }
 		$w = 0;
 		$h = 0;
-		if(isset($properties['WIDTH'])) $w = $this->ConvertSize($properties['WIDTH'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
-		if(isset($properties['HEIGHT'])) $h = $this->ConvertSize($properties['HEIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+		if(isset($properties['WIDTH'])) $w = Numeric::convertSize($properties['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+		if(isset($properties['HEIGHT'])) $h = Numeric::convertSize($properties['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 
-		if(isset($attr['WIDTH'])) $w = $this->ConvertSize($attr['WIDTH'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
-		if(isset($attr['HEIGHT'])) $h = $this->ConvertSize($attr['HEIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+		if(isset($attr['WIDTH'])) $w = Numeric::convertSize($attr['WIDTH'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+		if(isset($attr['HEIGHT'])) $h = Numeric::convertSize($attr['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		if (isset($properties['OPACITY']) && $properties['OPACITY'] > 0 && $properties['OPACITY'] <= 1) { $objattr['opacity'] = $properties['OPACITY']; }
 		if ($this->HREF) { $objattr['link'] = $this->HREF; }	// ? this isn't used
 
@@ -18667,7 +18681,7 @@ function OpenTag($tag,$attr)
 			$this->base_table_properties['FONT-FAMILY'] = $properties['FONT-FAMILY'];
 		}
 		if (isset($properties['FONT-SIZE'])) { 
-		   $mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
+		   $mmsize = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi,$this->default_font_size/MPDF_K);
 		   if ($mmsize) {
 			$this->default_font_size = $mmsize*(MPDF_K);
    			$this->SetFontSize($this->default_font_size,false);
@@ -18695,36 +18709,36 @@ function OpenTag($tag,$attr)
 		}
 
 		if (isset($properties['PADDING-LEFT'])) { 
-			$table['padding']['L'] = $this->ConvertSize($properties['PADDING-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$table['padding']['L'] = Numeric::convertSize($properties['PADDING-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 		if (isset($properties['PADDING-RIGHT'])) { 
-			$table['padding']['R'] = $this->ConvertSize($properties['PADDING-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$table['padding']['R'] = Numeric::convertSize($properties['PADDING-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 		if (isset($properties['PADDING-TOP'])) { 
-			$table['padding']['T'] = $this->ConvertSize($properties['PADDING-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$table['padding']['T'] = Numeric::convertSize($properties['PADDING-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 		if (isset($properties['PADDING-BOTTOM'])) { 
-			$table['padding']['B'] = $this->ConvertSize($properties['PADDING-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$table['padding']['B'] = Numeric::convertSize($properties['PADDING-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 
 		if (isset($properties['MARGIN-TOP'])) { 
 			if ($lastbottommargin) { 
-				$tmp = $this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+				$tmp = Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 				if ($tmp > $lastbottommargin) { $properties['MARGIN-TOP'] -= $lastbottommargin; }
 				else { $properties['MARGIN-TOP'] = 0; }
 			}
-			$table['margin']['T'] = $this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$table['margin']['T'] = Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		}
 
 		if (isset($properties['MARGIN-BOTTOM'])) { 
-			$table['margin']['B'] = $this->ConvertSize($properties['MARGIN-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$table['margin']['B'] = Numeric::convertSize($properties['MARGIN-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		}
 		if (isset($properties['MARGIN-LEFT'])) {
-			$table['margin']['L'] = $this->ConvertSize($properties['MARGIN-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$table['margin']['L'] = Numeric::convertSize($properties['MARGIN-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		}
 
 		if (isset($properties['MARGIN-RIGHT'])) {
-			$table['margin']['R'] = $this->ConvertSize($properties['MARGIN-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$table['margin']['R'] = Numeric::convertSize($properties['MARGIN-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		}
 		if (isset($properties['MARGIN-LEFT']) && isset($properties['MARGIN-RIGHT']) && strtolower($properties['MARGIN-LEFT'])=='auto' && strtolower($properties['MARGIN-RIGHT'])=='auto') { 
 			$table['a'] = 'C'; 
@@ -18749,10 +18763,10 @@ function OpenTag($tag,$attr)
 		}
 
 		if (isset($properties['BORDER-SPACING-H'])) { 
-			$table['border_spacing_H'] = $this->ConvertSize($properties['BORDER-SPACING-H'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$table['border_spacing_H'] = Numeric::convertSize($properties['BORDER-SPACING-H'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		}
 		if (isset($properties['BORDER-SPACING-V'])) { 
-			$table['border_spacing_V'] = $this->ConvertSize($properties['BORDER-SPACING-V'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+			$table['border_spacing_V'] = Numeric::convertSize($properties['BORDER-SPACING-V'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 		}
 
 		if (isset($properties['EMPTY-CELLS'])) { 
@@ -18785,7 +18799,7 @@ function OpenTag($tag,$attr)
 
 	if (!$table['borders_separate']) { $table['border_spacing_H'] = $table['border_spacing_V'] = 0; }
 	else if (isset($attr['CELLSPACING'])) { 
-		$table['border_spacing_H'] = $table['border_spacing_V'] = $this->ConvertSize($attr['CELLSPACING'],$this->blk[$this->blklvl]['inner_width']); 
+		$table['border_spacing_H'] = $table['border_spacing_V'] = Numeric::convertSize($attr['CELLSPACING'],$this->dpi,$this->blk[$this->blklvl]['inner_width']); 
 	}
 
 
@@ -18834,14 +18848,14 @@ function OpenTag($tag,$attr)
 		if (strpos($w,'%') && $this->tableLevel == 1 && !$this->ignore_table_percents ) { 
 			// % needs to be of inner box without table margins etc.
 			$maxwidth -= $tblblw ;
-			$wmm = $this->ConvertSize($w,$maxwidth,$this->FontSize,false);
+			$wmm = Numeric::convertSize($w,$this->dpi,$maxwidth,$this->FontSize,false);
 			$table['w'] = $wmm + $tblblw ;
 		}
 		if (strpos($w,'%') && $this->tableLevel > 1 && !$this->ignore_table_percents && $this->keep_table_proportions) { 
 			$table['wpercent'] = $w + 0; 	// makes 80% -> 80
 		}
 		if (!strpos($w,'%') && !$this->ignore_table_widths ) {
-			$wmm = $this->ConvertSize($w,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$wmm = Numeric::convertSize($w,$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 			$table['w'] = $wmm + $tblblw ;
 		}
 		if (!$this->keep_table_proportions) {
@@ -19154,7 +19168,7 @@ function OpenTag($tag,$attr)
 
 		if (isset($properties['LETTER-SPACING']) && ($properties['LETTER-SPACING'] || $properties['LETTER-SPACING']==='0') && strtoupper($properties['LETTER-SPACING']) != 'NORMAL') {  	// mPDF 5.0.066
 			$this->lSpacingCSS = strtoupper($properties['LETTER-SPACING']);
-			$this->fixedlSpacing = $this->ConvertSize($this->lSpacingCSS,$this->FontSize); 
+			$this->fixedlSpacing = Numeric::convertSize($this->lSpacingCSS,$this->dpi,$this->FontSize); 
 		}
 		else { 
 			$this->lSpacingCSS = '';
@@ -19162,7 +19176,7 @@ function OpenTag($tag,$attr)
 		}
 		if (isset($properties['WORD-SPACING']) && strtoupper($properties['WORD-SPACING']) != 'NORMAL') { 
 			$this->wSpacingCSS = strtoupper($properties['WORD-SPACING']);
-			$this->minwSpacing = $this->ConvertSize($this->wSpacingCSS,$this->FontSize); 
+			$this->minwSpacing = Numeric::convertSize($this->wSpacingCSS,$this->dpi,$this->FontSize); 
 		}
 		else { 
 			$this->minwSpacing = 0; 
@@ -19257,16 +19271,16 @@ function OpenTag($tag,$attr)
 		}
 
 		if (isset($properties['PADDING-LEFT'])) { 
-			$cell['padding']['L'] = $this->ConvertSize($properties['PADDING-LEFT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$cell['padding']['L'] = Numeric::convertSize($properties['PADDING-LEFT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 		if (isset($properties['PADDING-RIGHT'])) { 
-			$cell['padding']['R'] = $this->ConvertSize($properties['PADDING-RIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$cell['padding']['R'] = Numeric::convertSize($properties['PADDING-RIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 		if (isset($properties['PADDING-BOTTOM'])) { 
-			$cell['padding']['B'] = $this->ConvertSize($properties['PADDING-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$cell['padding']['B'] = Numeric::convertSize($properties['PADDING-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 		if (isset($properties['PADDING-TOP'])) { 
-			$cell['padding']['T'] = $this->ConvertSize($properties['PADDING-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$cell['padding']['T'] = Numeric::convertSize($properties['PADDING-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 		}
 
 		$w = '';
@@ -19274,10 +19288,10 @@ function OpenTag($tag,$attr)
 		if (isset($attr['WIDTH'])) { $w = $attr['WIDTH']; }
 		if ($w) { 
 			if (strpos($w,'%') && !$this->ignore_table_percents ) { $cell['wpercent'] = $w + 0; }	// makes 80% -> 80
-			else if (!strpos($w,'%') && !$this->ignore_table_widths ) { $cell['w'] = $this->ConvertSize($w,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+			else if (!strpos($w,'%') && !$this->ignore_table_widths ) { $cell['w'] = Numeric::convertSize($w,$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 		}
 
-		if (isset($properties['HEIGHT'])) { $cell['h']	= $this->ConvertSize($properties['HEIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+		if (isset($properties['HEIGHT'])) { $cell['h']	= Numeric::convertSize($properties['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
 		if (isset($properties['COLOR'])) {
 		  $cor = $this->ConvertColor($properties['COLOR']);
@@ -19291,7 +19305,7 @@ function OpenTag($tag,$attr)
 			$this->SetFont($properties['FONT-FAMILY'],'',0,false);
 		}
 		if (isset($properties['FONT-SIZE'])) { 
-		   $mmsize = $this->ConvertSize($properties['FONT-SIZE'],$this->default_font_size/MPDF_K);
+		   $mmsize = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi,$this->default_font_size/MPDF_K);
 		   if ($mmsize) {
   			$this->SetFontSize($mmsize*(MPDF_K),false);
 		   }
@@ -19312,7 +19326,7 @@ function OpenTag($tag,$attr)
 		$properties = array();
 
 
-	if (isset($attr['HEIGHT'])) $cell['h'] = $this->ConvertSize($attr['HEIGHT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+	if (isset($attr['HEIGHT'])) $cell['h'] = Numeric::convertSize($attr['HEIGHT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 
 	if (isset($attr['ALIGN'])) $cell['a'] = $align[strtolower($attr['ALIGN'])];
 
@@ -19465,14 +19479,14 @@ function OpenTag($tag,$attr)
 	if ($this->listlvl == 1) {
 	   if (isset($properties['MARGIN-TOP'])) { 
 		if ($lastbottommargin) { 
-			$tmp = $this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
+			$tmp = Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false);
 			if ($tmp > $lastbottommargin) { $properties['MARGIN-TOP'] -= $lastbottommargin; }
 			else { $properties['MARGIN-TOP'] = 0; }
 		}
-		$this->DivLn($this->ConvertSize($properties['MARGIN-TOP'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false),$this->blklvl,true,1); 	// collapsible
+		$this->DivLn(Numeric::convertSize($properties['MARGIN-TOP'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false),$this->blklvl,true,1); 	// collapsible
 	   }
 	   if (isset($properties['MARGIN-BOTTOM'])) { 
-		$this->list_margin_bottom = $this->ConvertSize($properties['MARGIN-BOTTOM'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
+		$this->list_margin_bottom = Numeric::convertSize($properties['MARGIN-BOTTOM'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); 
 	   }
 	   
 	   if (isset($this->blk[$this->blklvl]['line_height'])) {
@@ -19484,7 +19498,7 @@ function OpenTag($tag,$attr)
 
 	}
 	$this->list_indent[$this->listlvl][$occur] = 5;	// mm default indent for each level
-	if (isset($properties['TEXT-INDENT'])) { $this->list_indent[$this->listlvl][$occur] = $this->ConvertSize($properties['TEXT-INDENT'],$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
+	if (isset($properties['TEXT-INDENT'])) { $this->list_indent[$this->listlvl][$occur] = Numeric::convertSize($properties['TEXT-INDENT'],$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
 	if (isset($properties['TEXT-ALIGN'])) { 
 		$this->list_align[$this->listlvl][$occur] = $align[strtolower($properties['TEXT-ALIGN'])]; 
@@ -20078,7 +20092,7 @@ function CloseTag($tag)
 			}
 		}
 		$this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['is_tfoot'] = array();
-		for($i=count($temp) ; $i<(count($temp)+count($temptf)); $i++) {
+		for($i=count($temp),$len=count($temp)+count($temptf); $i<$len; $i++) {
 			$this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['is_tfoot'][$i] = true;
 		}
 		// Update nestedpos row references
@@ -21149,13 +21163,13 @@ function printbuffer($arrayaux,$blockstate=0,$is_table=false,$is_list=false)
       if(isset($vetor[15])) { 	 // Word spacing
 		$this->wSpacingCSS = $vetor[15]; 
 		if ($this->wSpacingCSS && strtoupper($this->wSpacingCSS) != 'NORMAL') { 
-			$this->minwSpacing = $this->ConvertSize($this->wSpacingCSS,$this->FontSize);
+			$this->minwSpacing = Numeric::convertSize($this->wSpacingCSS,$this->dpi,$this->dpi,$this->FontSize);
 		}
 	}
       if(isset($vetor[14])) { 	 // Letter spacing
 		$this->lSpacingCSS = $vetor[14]; 
 		if (($this->lSpacingCSS || $this->lSpacingCSS==='0') && strtoupper($this->lSpacingCSS) != 'NORMAL') {
-			$this->fixedlSpacing = $this->ConvertSize($this->lSpacingCSS,$this->FontSize); 
+			$this->fixedlSpacing = Numeric::convertSize($this->lSpacingCSS,$this->dpi,$this->FontSize); 
 		}
 	}
       if(isset($vetor[13])) { 	 // Font Kerning
@@ -22415,7 +22429,7 @@ function ReadMetaTags($html) {
 	preg_match_all('/<meta [^>]*?(name|content)="([^>]*?)" [^>]*?(name|content)="([^>]*?)".*?>/si',$html,$aux);
 	$firstattr = $aux[1];
 	$secondattr = $aux[3];
-	for( $i = 0 ; $i < count($aux[0]) ; $i++) {
+	for($i=0, $auxlen=count($aux[0]); $i<$auxlen; $i++) {
 
 		$name = ( strtoupper($firstattr[$i]) == "NAME" )? strtoupper($aux[2][$i]) : strtoupper($aux[4][$i]);
 		$content = ( strtoupper($firstattr[$i]) == "CONTENT" )? $aux[2][$i] : $aux[4][$i];
@@ -22456,7 +22470,7 @@ function ReadDefaultCSS($CSSstr) {
 	$CSSstr = preg_replace('/(<\!\-\-|\-\->)/s',' ',$CSSstr);
 	if ($CSSstr ) {
 		preg_match_all('/(.*?)\{(.*?)\}/',$CSSstr,$styles);
-		for($i=0; $i < count($styles[1]) ; $i++)  {
+		for($i=0, $len=count($styles[1]); $i<$len; $i++)  {
 			$stylestr= trim($styles[2][$i]);
 			$stylearr = explode(';',$stylestr);
 			foreach($stylearr AS $sta) {
@@ -22501,13 +22515,13 @@ function ReadDefaultCSS($CSSstr) {
 
 function ReadCSS($html) {
 	preg_match_all('/<style[^>]*media=["\']([^"\'>]*)["\'].*?<\/style>/is',$html,$m);
-	for($i=0; $i<count($m[0]); $i++) {
+	for($i=0, $mlen=count($m[0]); $i<$mlen; $i++) {
 		if ($this->CSSselectMedia && !preg_match('/('.trim($this->CSSselectMedia).'|all)/i',$m[1][$i])) { 
 			$html = preg_replace('/'.preg_quote($m[0][$i],'/').'/','',$html);
 		}
 	}
 	preg_match_all('/<link[^>]*media=["\']([^"\'>]*)["\'].*?>/is',$html,$m);
-	for($i=0; $i<count($m[0]); $i++) {
+	for($i=0, $mlen=count($m[0]); $i<$mlen; $i++) {
 		if ($this->CSSselectMedia && !preg_match('/('.trim($this->CSSselectMedia).'|all)/i',$m[1][$i])) { 
 			$html = preg_replace('/'.preg_quote($m[0][$i],'/').'/','',$html);
 		}
@@ -22517,7 +22531,7 @@ function ReadCSS($html) {
 	// Remove Comment tags /* ...  */ inside CSS as <style> in HTML document
 	preg_match_all('/<style.*?>(.*?)<\/style>/si',$html,$m);
 	if (count($m[1])) { 
-		for($i=0;$i<count($m[1]);$i++) {
+		for($i=0, $mlen=count($m[1]); $i<$mlen; $i++) {
 			// Remove comment tags 
 			$sub = preg_replace('/(<\!\-\-|\-\->)/s',' ',$m[1][$i]);
 			$sub = preg_replace('|/\*.*?\*/|s',' ',$sub);
@@ -22771,7 +22785,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 	if (isset($arrayaux['FONT-SIZE'])) {
 		$v = $arrayaux['FONT-SIZE'];
 		if(is_numeric($v[0])) {
-			$mmsize = $this->ConvertSize($v,$this->FontSize);
+			$mmsize = Numeric::convertSize($v,$this->dpi,$this->FontSize);
 			$this->SetFontSize( $mmsize*(MPDF_K),false ); //Get size in points (pt)
 		}
 		else{
@@ -22870,21 +22884,21 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 
 		// PADDING
 		case 'PADDING-TOP':
-			$this->blk[$this->blklvl]['padding_top'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['padding_top'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'PADDING-BOTTOM':
-			$this->blk[$this->blklvl]['padding_bottom'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['padding_bottom'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'PADDING-LEFT':
-			$this->blk[$this->blklvl]['padding_left'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['padding_left'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'PADDING-RIGHT':
-			$this->blk[$this->blklvl]['padding_right'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['padding_right'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 
 		// MARGINS
 		case 'MARGIN-TOP':
-			$tmp = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$tmp = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			if (isset($this->blk[$this->blklvl]['lastbottommargin'])) {
 				if ($tmp > $this->blk[$this->blklvl]['lastbottommargin']) {
 					$tmp -= $this->blk[$this->blklvl]['lastbottommargin'];
@@ -22896,39 +22910,39 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 			$this->blk[$this->blklvl]['margin_top'] = $tmp;
 			break;
 		case 'MARGIN-BOTTOM':
-			$this->blk[$this->blklvl]['margin_bottom'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['margin_bottom'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'MARGIN-LEFT':
-			$this->blk[$this->blklvl]['margin_left'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['margin_left'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'MARGIN-RIGHT':
-			$this->blk[$this->blklvl]['margin_right'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['margin_right'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 
 /*-- BORDER-RADIUS --*/
 		case 'BORDER-TOP-LEFT-RADIUS-H':
-			$this->blk[$this->blklvl]['border_radius_TL_H'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_TL_H'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-TOP-LEFT-RADIUS-V':
-			$this->blk[$this->blklvl]['border_radius_TL_V'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_TL_V'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-TOP-RIGHT-RADIUS-H':
-			$this->blk[$this->blklvl]['border_radius_TR_H'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_TR_H'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-TOP-RIGHT-RADIUS-V':
-			$this->blk[$this->blklvl]['border_radius_TR_V'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_TR_V'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-BOTTOM-LEFT-RADIUS-H':
-			$this->blk[$this->blklvl]['border_radius_BL_H'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_BL_H'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-BOTTOM-LEFT-RADIUS-V':
-			$this->blk[$this->blklvl]['border_radius_BL_V'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_BL_V'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-BOTTOM-RIGHT-RADIUS-H':
-			$this->blk[$this->blklvl]['border_radius_BR_H'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_BR_H'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 		case 'BORDER-BOTTOM-RIGHT-RADIUS-V':
-			$this->blk[$this->blklvl]['border_radius_BR_V'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
+			$this->blk[$this->blklvl]['border_radius_BR_V'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false);
 			break;
 /*-- END BORDER-RADIUS --*/
 
@@ -22942,7 +22956,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 
 		case 'WIDTH':
 			if (strtoupper($v) != 'AUTO') { 
-				$this->blk[$this->blklvl]['css_set_width'] = $this->ConvertSize($v,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false); 
+				$this->blk[$this->blklvl]['css_set_width'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl-1]['inner_width'],$this->FontSize,false); 
 			}
 			break;
 
@@ -23055,7 +23069,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 		case 'LETTER-SPACING': 
 			$this->lSpacingCSS = $v;
 			if (($this->lSpacingCSS || $this->lSpacingCSS==='0') && strtoupper($this->lSpacingCSS) != 'NORMAL') { 
-				$this->fixedlSpacing = $this->ConvertSize($this->lSpacingCSS,$this->FontSize);
+				$this->fixedlSpacing = Numeric::convertSize($this->lSpacingCSS,$this->dpi,$this->FontSize);
 			}
 			break;
 
@@ -23063,7 +23077,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 		case 'WORD-SPACING': 
 			$this->wSpacingCSS = $v;
 			if ($this->wSpacingCSS && strtoupper($this->wSpacingCSS) != 'NORMAL') {
-				$this->minwSpacing = $this->ConvertSize($this->wSpacingCSS,$this->FontSize);
+				$this->minwSpacing = Numeric::convertSize($this->wSpacingCSS,$this->dpi,$this->FontSize);
 			}
 			break;
 
@@ -23142,7 +23156,7 @@ function setCSS($arrayaux,$type='',$tag='') {	// type= INLINE | BLOCK // tag= BO
 				case 'MEDIUM': $v = '0.05em'; break;
 				case 'THICK': $v = '0.07em'; break;
 			}
-			$this->outlineparam['WIDTH'] = $this->ConvertSize($v,$this->blk[$this->blklvl]['inner_width'],$this->FontSize);
+			$this->outlineparam['WIDTH'] = Numeric::convertSize($v,$this->dpi,$this->blk[$this->blklvl]['inner_width'],$this->FontSize);
 			break;
 
 		case 'OUTLINE-COLOR': 
@@ -23422,13 +23436,13 @@ function TableWordWrap($maxwidth, $forcewrap = 0, $textbuffer = '', $def_fontsiz
       if(isset($chunk[15])) { 	 // Word spacing
 		$this->wSpacingCSS = $chunk[15]; 
 		if ($this->wSpacingCSS && strtoupper($this->wSpacingCSS) != 'NORMAL') { 
-			$this->minwSpacing = $this->ConvertSize($this->wSpacingCSS,$this->FontSize); 
+			$this->minwSpacing = Numeric::convertSize($this->wSpacingCSS,$this->dpi,$this->FontSize); 
 		}
 	}
       if(isset($chunk[14])) { 	 // Letter spacing
 		$this->lSpacingCSS = $chunk[14]; 
 		if (($this->lSpacingCSS || $this->lSpacingCSS==='0') && strtoupper($this->lSpacingCSS) != 'NORMAL') {
-			$this->fixedlSpacing = $this->ConvertSize($this->lSpacingCSS,$this->FontSize);
+			$this->fixedlSpacing = Numeric::convertSize($this->lSpacingCSS,$this->dpi,$this->FontSize);
 		}
 	}
       if(isset($chunk[12])) { 	 // Font Kerning
@@ -23700,13 +23714,13 @@ function TableCheckMinWidth(&$text, $maxwidth, $forcewrap = 0, $textbuffer = '')
 	      if(isset($chunk[15])) { 	 // Word spacing
 			$this->wSpacingCSS = $chunk[15]; 
 			if ($this->wSpacingCSS && strtoupper($this->wSpacingCSS) != 'NORMAL') { 
-				$this->minwSpacing = $this->ConvertSize($this->wSpacingCSS,$this->FontSize);
+				$this->minwSpacing = Numeric::convertSize($this->wSpacingCSS,$this->dpi,$this->FontSize);
 			}
 		}
 	      if(isset($chunk[14])) { 	 // Letter spacing
 			$this->lSpacingCSS = $chunk[14]; 
 			if (($this->lSpacingCSS || $this->lSpacingCSS==='0') && strtoupper($this->lSpacingCSS) != 'NORMAL') {
-				$this->fixedlSpacing = $this->ConvertSize($this->lSpacingCSS,$this->FontSize); 
+				$this->fixedlSpacing = Numeric::convertSize($this->lSpacingCSS,$this->dpi,$this->FontSize); 
 			}
 		}
 	      if(isset($chunk[12])) { 	 // Font Kerning
@@ -30294,7 +30308,7 @@ function AutosizeText($text,$w,$font,$style,$szfont=72) {
 	}
 	if ($this->onlyCoreFonts) { $text = mb_convert_encoding($text,$this->mb_enc,'UTF-8'); }
 	$text = ' '.$text.' ';
-	$width = $this->ConvertSize($w);
+	$width = Numeric::convertSize($w,$this->dpi);
 	$loop   = 0;
 	while ( $loop == 0 ) {
 		$this->SetFont($font,$style,$szfont);
@@ -31813,71 +31827,6 @@ function ConvertColor($color="#000000"){
 		}
 	}
 	return $c;
-}
-
-function ConvertSize($size=5,$maxsize=0,$fontsize=false,$usefontsize=true){
-// usefontsize - setfalse for e.g. margins - will ignore fontsize for % values
-// Depends of maxsize value to make % work properly. Usually maxsize == pagewidth
-// For text $maxsize = Fontsize
-// Setting e.g. margin % will use maxsize (pagewidth) and em will use fontsize
-  //Identify size (remember: we are using 'mm' units here)
-	$size = trim(strtolower($size));
-
-  if ( $size == 'thin' ) $size = 1*(25.4/$this->dpi); //1 pixel width for table borders
-  elseif ( stristr($size,'px') ) $size *= (25.4/$this->dpi); //pixels
-  elseif ( stristr($size,'cm') ) $size *= 10; //centimeters
-  elseif ( stristr($size,'mm') ) $size += 0; //millimeters
-  elseif ( stristr($size,'pt') ) $size *= 25.4/72; //72 pts/inch
-  elseif ( stristr($size,'em') ) {
-  	$size += 0; //make "0.83em" become simply "0.83" 
-	if ($fontsize) { $size *= $fontsize; }
-	else { $size *= $maxsize; }
-  }
-  elseif ( stristr($size,'%') ) {
-  	$size += 0; //make "90%" become simply "90" 
-	if ($fontsize && $usefontsize) { $size *= $fontsize/100; }
-	else { $size *= $maxsize/100; }
-  }
-  elseif ( stristr($size,'in') ) $size *= 25.4; //inches 
-  elseif ( stristr($size,'pc') ) $size *= 38.1/9; //PostScript picas 
-  elseif ( stristr($size,'ex') ) {	// Approximates "ex" as half of font height
-  	$size += 0; //make "3.5ex" become simply "3.5" 
-	if ($fontsize) { $size *= $fontsize/2; }
-	else { $size *= $maxsize/2; }
-  }
-  elseif ( $size == 'medium' ) $size = 3*(25.4/$this->dpi); //3 pixel width for table borders
-  elseif ( $size == 'thick' ) $size = 5*(25.4/$this->dpi); //5 pixel width for table borders
-  elseif ($size == 'xx-small') {
-	if ($fontsize) { $size *= $fontsize*0.7; }
-	else { $size *= $maxsize*0.7; }
-  }
-  elseif ($size == 'x-small') {
-	if ($fontsize) { $size *= $fontsize*0.77; }
-	else { $size *= $maxsize*0.77; }
-  }
-  elseif ($size == 'small') {
-	if ($fontsize) { $size *= $fontsize*0.86; }
-	else { $size *= $maxsize*0.86; }
-  }
-  elseif ($size == 'medium') {
-	if ($fontsize) { $size *= $fontsize; }
-	else { $size *= $maxsize; }
-  }
-  elseif ($size == 'large') {
-	if ($fontsize) { $size *= $fontsize*1.2; }
-	else { $size *= $maxsize*1.2; }
-  }
-  elseif ($size == 'x-large') {
-	if ($fontsize) { $size *= $fontsize*1.5; }
-	else { $size *= $maxsize*1.5; }
-  }
-  elseif ($size == 'xx-large') {
-	if ($fontsize) { $size *= $fontsize*2; }
-	else { $size *= $maxsize*2; }
-  }
-  else $size *= (25.4/$this->dpi); //nothing == px
-  
-  return $size;
 }
 
 

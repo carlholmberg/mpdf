@@ -232,3 +232,72 @@ class Text
 						   $html);
 	}
 }
+
+class Numeric
+{
+	/**
+	 * convertSize
+	 *
+	 * Depends of maxsize value to make % work properly. Usually maxsize == pagewidth
+	 * For text $maxsize = Fontsize
+	 * Setting e.g. margin % will use maxsize (pagewidth) and em will use fontsize
+	 *
+	 * @param  bool  $usefontsize   Set to false for e.g. margins - will ignore fontsize for % values
+	 */
+	public static function convertSize($size=5, $dpi=96, $maxsize=0, $fontsize=false, $usefontsize=true)
+	{
+		//Identify size (remember: we are using 'mm' units here)
+		$size = strtolower($size);
+		if ($size == 'thin') {
+			//1 pixel width for table borders
+			return 25.4 / $dpi; // mPDF 4.4.003
+		} else if ($size == 'medium') {
+			//3 pixel width for table borders
+			return 3 * 25.4 / $dpi; // mPDF 4.4.003
+		} else if ($size == 'thick') {
+			//5 pixel width for table borders
+			return 5 * 25.4 / $dpi; // mPDF 4.4.003
+		} else if (strstr($size, 'px')) {
+			//pixels
+			return $size * 25.4 / $dpi; // mPDF 4.4.003
+		} else if (strstr($size, 'cm')) {
+			//centimeters
+			return $size * 10;
+		} else if (strstr($size, 'mm')) {
+			//millimeters
+			return $size + 0;
+		} else if (strstr($size, 'in')) {
+			//inches
+			return $size * 25.4;
+		} else if (strstr($size, 'pc')) {
+			//PostScript picas
+			return $size * 38.1 / 9;
+		} else if (strstr($size, 'pt')) {
+			//72 pts/inch
+			return $size * 25.4 / 72;
+		} else if (strstr($size, 'ex')) {
+			// mPDF 4.4.003  Approximates "ex" as half of font height
+			return $size * 0.5 * (($fontsize)? $fontsize : $maxsize);
+		} else if (strstr($size, 'em')) {
+			return $size * (($fontsize)? $fontsize : $maxsize);
+		} else if (strstr($size, '%')) {
+			return $size / 100 * (($fontsize && $usefontsize)? $fontsize : $maxsize);
+		} else if ($size == 'xx-small') {
+			return $size * 0.7 * (($fontsize)? $fontsize : $maxsize);
+		} else if ($size == 'x-small') {
+			return $size * 0.77 * (($fontsize)? $fontsize : $maxsize);
+		} else if ($size == 'small') {
+			return $size * 0.86 * (($fontsize)? $fontsize : $maxsize);
+		} else if ($size == 'medium') {
+			return $size * (($fontsize)? $fontsize : $maxsize);
+		} else if ($size == 'large') {
+			return $size * 1.2 * (($fontsize)? $fontsize : $maxsize);
+		} else if ($size == 'x-large') {
+			return $size * 1.5 * (($fontsize)? $fontsize : $maxsize);
+		} else if ($size == 'xx-large') {
+			return $size * 2 * (($fontsize)? $fontsize : $maxsize);
+		}
+		//nothing == px // mPDF 4.4.003
+		return $size * 25.4 / $dpi;
+	}
+}
