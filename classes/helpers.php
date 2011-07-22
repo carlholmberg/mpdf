@@ -186,6 +186,26 @@ class Color
 		else if ($cor[0]==6) $s = 'cmyka('.$cor[1].','.$cor[2].','.$cor[3].','.$cor[4].','.$cor[5].')';
 		return $s;
 	}
+	
+	static function setColor($col, $type='')
+	{
+		$out = '';
+		if ($col[0]==3 || $col[0]==5) {	// RGB / RGBa
+			$out = sprintf('%.3f %.3f %.3f rg',$col[1]/255,$col[2]/255,$col[3]/255);
+		}
+		else if ($col[0]==1) {	// GRAYSCALE
+			$out = sprintf('%.3f g',$col[1]/255);
+		}
+		else if ($col[0]==2) {	// SPOT COLOR
+			$out = sprintf('/CS%d cs %.3f scn',$col[1],$col[2]/100);
+		}
+		else if ($col[0]==4 || $col[0]==6) {	// CMYK / CMYKa
+			$out = sprintf('%.3f %.3f %.3f %.3f k', $col[1]/100, $col[2]/100, $col[3]/100, $col[4]/100);
+		}
+		if ($type=='Draw') { $out = strtoupper($out); }	// e.g. rg => RG
+		else if ($type=='CodeOnly') { $out = preg_replace('/\s(rg|g|k)/','',$out); }	// mPDF 5.2.13
+		return $out; 
+	}
 }
 
 class Text
@@ -244,7 +264,7 @@ class Numeric
 	 *
 	 * @param  bool  $usefontsize   Set to false for e.g. margins - will ignore fontsize for % values
 	 */
-	public static function convertSize($size=5, $dpi=96, $maxsize=0, $fontsize=false, $usefontsize=true)
+	static function convertSize($size=5, $dpi=96, $maxsize=0, $fontsize=false, $usefontsize=true)
 	{
 		//Identify size (remember: we are using 'mm' units here)
 		$size = strtolower($size);
@@ -299,5 +319,123 @@ class Numeric
 		}
 		//nothing == px // mPDF 4.4.003
 		return $size * 25.4 / $dpi;
+	}
+	
+	/**
+	 * pageFormat
+	 * @since: mPDF 4.2.024
+	 */
+	static function pageFormat($format)
+	{
+		switch (strtoupper($format)) {
+			case '4A0':
+				return array(4767.87, 6740.79);
+			case '2A0':
+				return array(3370.39, 4767.87);
+			case 'A0':
+				return array(2383.94, 3370.39);
+			case 'A1':
+				return array(1683.78, 2383.94);
+			case 'A2':
+				return array(1190.55, 1683.78);
+			case 'A3':
+				return array(841.89, 1190.55);
+			case 'A4':
+			default:
+				return array(595.28, 841.89);
+			case 'A5':
+				return array(419.53, 595.28);
+			case 'A6':
+				return array(297.64, 419.53);
+			case 'A7':
+				return array(209.76, 297.64);
+			case 'A8':
+				return array(147.40, 209.76);
+			case 'A9':
+				return array(104.88, 147.40);
+			case 'A10':
+				return array(73.70, 104.88);
+			case 'B0':
+				return array(2834.65, 4008.19);
+			case 'B1':
+				return array(2004.09, 2834.65);
+			case 'B2':
+				return array(1417.32, 2004.09);
+			case 'B3':
+				return array(1000.63, 1417.32);
+			case 'B4':
+				return array(708.66, 1000.63);
+			case 'B5':
+				return array(498.90, 708.66);
+			case 'B6':
+				return array(354.33, 498.90);
+			case 'B7':
+				return array(249.45, 354.33);
+			case 'B8':
+				return array(175.75, 249.45);
+			case 'B9':
+				return array(124.72, 175.75);
+			case 'B10':
+				return array(87.87, 124.72);
+			case 'C0':
+				return array(2599.37, 3676.54);
+			case 'C1':
+				return array(1836.85, 2599.37);
+			case 'C2':
+				return array(1298.27, 1836.85);
+			case 'C3':
+				return array(918.43, 1298.27);
+			case 'C4':
+				return array(649.13, 918.43);
+			case 'C5':
+				return array(459.21, 649.13);
+			case 'C6':
+				return array(323.15, 459.21);
+			case 'C7':
+				return array(229.61, 323.15);
+			case 'C8':
+				return array(161.57, 229.61);
+			case 'C9':
+				return array(113.39, 161.57);
+			case 'C10':
+				return array(79.37, 113.39);
+			case 'RA0':
+				return array(2437.80, 3458.27);
+			case 'RA1':
+				return array(1729.13, 2437.80);
+			case 'RA2':
+				return array(1218.90, 1729.13);
+			case 'RA3':
+				return array(864.57, 1218.90);
+			case 'RA4':
+				return array(609.45, 864.57);
+			case 'SRA0':
+				return array(2551.18, 3628.35);
+			case 'SRA1':
+				return array(1814.17, 2551.18);
+			case 'SRA2':
+				return array(1275.59, 1814.17);
+			case 'SRA3':
+				return array(907.09, 1275.59);
+			case 'SRA4':
+				return array(637.80, 907.09);
+			case 'LETTER':
+				return array(612.00, 792.00);
+			case 'LEGAL':
+				return array(612.00, 1008.00);
+			case 'EXECUTIVE':
+				return array(521.86, 756.00);
+			case 'FOLIO':
+				return array(612.00, 936.00);
+			case 'B':
+				return array(362.83, 561.26); // 'B' format paperback size 128x198mm
+			case 'A':
+				return array(314.65, 504.57); // 'A' format paperback size 111x178mm
+			case 'DEMY':
+				return array(382.68, 612.28); // 'Demy' format paperback size 135x216mm
+			case 'ROYAL':
+				return array(433.70, 663.30); // 'Royal' format paperback size 153x234mm
+		}
+		return false; // will probably never be run
 	}
 }

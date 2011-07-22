@@ -1439,7 +1439,7 @@ function _setPageSize($format, &$orientation) {
 			$format=$m[1]; 
 			$pfo='L'; 
 		}
-		$format = $this->_getPageFormat($format);
+		$format = Numeric::pageFormat($format);
 		if (!$format) { $this->Error('Unknown page format: '.$format); }
 		else { $orientation = $pfo; }
 
@@ -1473,66 +1473,6 @@ function _setPageSize($format, &$orientation) {
 
 	$this->w=$this->wPt/MPDF_K;
 	$this->h=$this->hPt/MPDF_K;
-}
-
-function _getPageFormat($format) {
-		switch (strtoupper($format)) {
-			case '4A0': {$format = array(4767.87,6740.79); break;}
-			case '2A0': {$format = array(3370.39,4767.87); break;}
-			case 'A0': {$format = array(2383.94,3370.39); break;}
-			case 'A1': {$format = array(1683.78,2383.94); break;}
-			case 'A2': {$format = array(1190.55,1683.78); break;}
-			case 'A3': {$format = array(841.89,1190.55); break;}
-			case 'A4': default: {$format = array(595.28,841.89); break;}
-			case 'A5': {$format = array(419.53,595.28); break;}
-			case 'A6': {$format = array(297.64,419.53); break;}
-			case 'A7': {$format = array(209.76,297.64); break;}
-			case 'A8': {$format = array(147.40,209.76); break;}
-			case 'A9': {$format = array(104.88,147.40); break;}
-			case 'A10': {$format = array(73.70,104.88); break;}
-			case 'B0': {$format = array(2834.65,4008.19); break;}
-			case 'B1': {$format = array(2004.09,2834.65); break;}
-			case 'B2': {$format = array(1417.32,2004.09); break;}
-			case 'B3': {$format = array(1000.63,1417.32); break;}
-			case 'B4': {$format = array(708.66,1000.63); break;}
-			case 'B5': {$format = array(498.90,708.66); break;}
-			case 'B6': {$format = array(354.33,498.90); break;}
-			case 'B7': {$format = array(249.45,354.33); break;}
-			case 'B8': {$format = array(175.75,249.45); break;}
-			case 'B9': {$format = array(124.72,175.75); break;}
-			case 'B10': {$format = array(87.87,124.72); break;}
-			case 'C0': {$format = array(2599.37,3676.54); break;}
-			case 'C1': {$format = array(1836.85,2599.37); break;}
-			case 'C2': {$format = array(1298.27,1836.85); break;}
-			case 'C3': {$format = array(918.43,1298.27); break;}
-			case 'C4': {$format = array(649.13,918.43); break;}
-			case 'C5': {$format = array(459.21,649.13); break;}
-			case 'C6': {$format = array(323.15,459.21); break;}
-			case 'C7': {$format = array(229.61,323.15); break;}
-			case 'C8': {$format = array(161.57,229.61); break;}
-			case 'C9': {$format = array(113.39,161.57); break;}
-			case 'C10': {$format = array(79.37,113.39); break;}
-			case 'RA0': {$format = array(2437.80,3458.27); break;}
-			case 'RA1': {$format = array(1729.13,2437.80); break;}
-			case 'RA2': {$format = array(1218.90,1729.13); break;}
-			case 'RA3': {$format = array(864.57,1218.90); break;}
-			case 'RA4': {$format = array(609.45,864.57); break;}
-			case 'SRA0': {$format = array(2551.18,3628.35); break;}
-			case 'SRA1': {$format = array(1814.17,2551.18); break;}
-			case 'SRA2': {$format = array(1275.59,1814.17); break;}
-			case 'SRA3': {$format = array(907.09,1275.59); break;}
-			case 'SRA4': {$format = array(637.80,907.09); break;}
-			case 'LETTER': {$format = array(612.00,792.00); break;}
-			case 'LEGAL': {$format = array(612.00,1008.00); break;}
-			case 'EXECUTIVE': {$format = array(521.86,756.00); break;}
-			case 'FOLIO': {$format = array(612.00,936.00); break;}
-			case 'B': {$format=array(362.83,561.26 );	 break;}		//	'B' format paperback size 128x198mm
-			case 'A': {$format=array(314.65,504.57 );	 break;}		//	'A' format paperback size 111x178mm
-			case 'DEMY': {$format=array(382.68,612.28 );  break;}		//	'Demy' format paperback size 135x216mm
-			case 'ROYAL': {$format=array(433.70,663.30 );  break;}	//	'Royal' format paperback size 153x234mm
-			default: $format = false;
-		}
-	return $format;
 }
 
 
@@ -2513,28 +2453,8 @@ function AddSpotColor($name, $c, $m, $y, $k) {
 	}
 }
 
-function SetColor($col, $type='') {
-	$out = '';
-	if ($col[0]==3 || $col[0]==5) {	// RGB / RGBa
-		$out = sprintf('%.3f %.3f %.3f rg',$col[1]/255,$col[2]/255,$col[3]/255);
-	}
-	else if ($col[0]==1) {	// GRAYSCALE
-		$out = sprintf('%.3f g',$col[1]/255);
-	}
-	else if ($col[0]==2) {	// SPOT COLOR
-		$out = sprintf('/CS%d cs %.3f scn',$col[1],$col[2]/100);
-	}
-	else if ($col[0]==4 || $col[0]==6) {	// CMYK / CMYKa
-		$out = sprintf('%.3f %.3f %.3f %.3f k', $col[1]/100, $col[2]/100, $col[3]/100, $col[4]/100);
-	}
-	if ($type=='Draw') { $out = strtoupper($out); }	// e.g. rg => RG
-	else if ($type=='CodeOnly') { $out = preg_replace('/\s(rg|g|k)/','',$out); }	// mPDF 5.2.13
-	return $out; 
-}
-
-
 function SetDColor($col, $return=false) {
-	$out = $this->SetColor($col, 'Draw');
+	$out = Color::setColor($col, 'Draw');
 	if ($return) { return $out; }
 	if ($out=='') { return ''; }
 	$this->DrawColor = $out;
@@ -2543,7 +2463,7 @@ function SetDColor($col, $return=false) {
 }
 
 function SetFColor($col, $return=false) {
-	$out = $this->SetColor($col, 'Fill');
+	$out = Color::setColor($col, 'Fill');
 	if ($return) { return $out; }
 	if ($out=='') { return ''; }
 	$this->FillColor = $out;
@@ -2553,7 +2473,7 @@ function SetFColor($col, $return=false) {
 }
 
 function SetTColor($col, $return=false) {
-	$out = $this->SetColor($col, 'Text');
+	$out = Color::setColor($col, 'Text');
 	if ($return) { return $out; }
 	if ($out=='') { return ''; }
 	$this->TextColor = $out;
@@ -14082,8 +14002,10 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 
 
 		//================================================================
-		if ($checkinnerhtml=='' && $inner_h==='auto') { $inner_h = 0.0001; }
-		if ($checkinnerhtml=='' && $inner_w==='auto') { $inner_w = $this->GetStringWidth('WW'); }
+		if ($checkinnerhtml == '') {
+			if ($inner_h === 'auto') $inner_h = 0.0001;
+			if ($inner_w === 'auto') $inner_w = $this->GetStringWidth('WW');
+		}
 		//================================================================
 		// Algorithm from CSS2.1  See http://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-height
 		if ($bbox_top==='auto' && $inner_h==='auto' && $bbox_bottom==='auto') {
@@ -14848,8 +14770,7 @@ function fixCSS($prop) {
 				$newprop['SIZE'] = strtoupper($prop[0]);
 			}
 			else if (count($prop) == 1 ) {
-				$newprop['SIZE']['W'] = Numeric::convertSize($prop[0],$this->dpi);
-				$newprop['SIZE']['H'] = Numeric::convertSize($prop[0],$this->dpi);
+				$newprop['SIZE']['W'] = $newprop['SIZE']['H'] = Numeric::convertSize($prop[0],$this->dpi);
 			}
 			else if (count($prop) == 2 ) {
 				$newprop['SIZE']['W'] = Numeric::convertSize($prop[0],$this->dpi);
@@ -14863,10 +14784,10 @@ function fixCSS($prop) {
 			}
 			else {
 				if(preg_match('/([0-9a-zA-Z]*)-L/i',$v,$m)) {	// e.g. A4-L = A$ landscape
-					$ft = $this->_getPageFormat($m[1]);
+					$ft = Numeric::pageFormat($m[1]);
 					$format = array($ft[1],$ft[0]);
 				}
-				else { $format = $this->_getPageFormat($v); }
+				else { $format = Numeric::pageFormat($v); }
 				if ($format) { $newprop['SHEET-SIZE'] = array($format[0]/MPDF_K, $format[1]/MPDF_K); }
 			}
 		}
@@ -16345,8 +16266,7 @@ function OpenTag($tag,$attr)
 			}
 			if (isset($properties['FONT-SIZE'])) { 
 				$p['L']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; 
-				$p['C']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; 
-				$p['R']['font-size'] = Numeric::convertSize($properties['FONT-SIZE'],$this->dpi) * MPDF_K; 
+				$p['C']['font-size'] = $p['R']['font-size'] = $p['L']['font-size'];
 			}
 			if (isset($properties['FONT-WEIGHT']) && $properties['FONT-WEIGHT']=='BOLD') { 
 				$p['L']['font-style'] = 'B'; 
@@ -19663,12 +19583,11 @@ function CloseTag($tag)
 	$this->$ltag = false;
     }
 
-
-    if($tag=='FONT' || $tag=='SPAN' || $tag=='CODE' || $tag=='KBD' || $tag=='SAMP' || $tag=='TT' || $tag=='VAR' 
-	|| $tag=='INS' || $tag=='STRONG' || $tag=='CITE' || $tag=='SUB' || $tag=='SUP' || $tag=='S' || $tag=='STRIKE' || $tag=='DEL'
-	|| $tag=='Q' || $tag=='EM' || $tag=='B' || $tag=='I' || $tag=='U' | $tag=='SMALL' || $tag=='BIG' || $tag=='ACRONYM') {
-
-
+	$tags = array('FONT', 'SPAN', 'CODE', 'KBD', 'SAMP', 'TT', 'VAR', 'INS', 'STRONG', 'CITE', 'SUB'
+				  'SUP', 'S', 'STRIKE', 'DEL', 'Q', 'EM', 'B', 'I', 'U', 'SMALL', 'BIG', 'ACRONYM');
+	
+	if (in_array($tag, $tags)) {
+    
 	if ($tag == 'SPAN') {
 		if (isset($this->InlineProperties['SPAN'][$this->spanlvl]) && $this->InlineProperties['SPAN'][$this->spanlvl]) { $this->restoreInlineProperties($this->InlineProperties['SPAN'][$this->spanlvl]); }
 		unset($this->InlineProperties['SPAN'][$this->spanlvl]);
@@ -19769,9 +19688,10 @@ function CloseTag($tag)
 
 	// *********** BLOCKS ********************
 
-    if($tag=='P' || $tag=='DIV' || $tag=='H1' || $tag=='H2' || $tag=='H3' || $tag=='H4' || $tag=='H5' || $tag=='H6' || $tag=='PRE' 
-	 || $tag=='FORM' || $tag=='ADDRESS' || $tag=='BLOCKQUOTE' || $tag=='CENTER' || $tag=='DT'  || $tag=='DD'  || $tag=='DL' ) { 
+	$tags = array('P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'PRE', 'FORM', 'ADDRESS',
+				  'BLOCKQUOTE', 'CENTER', 'DT', 'DD', 'DL');
 
+	if (in_array($tag, $tags)) {
 	$this->ignorefollowingspaces = true; //Eliminate exceeding left-side spaces
 	$this->blockjustfinished=true;
 
@@ -32591,9 +32511,9 @@ function SetFormText( $w, $h, $name, $value = '', $default = '', $title = '', $f
 		$title = $this->UTF8ToUTF16BE($title, true); 
 	}
 	// mPDF 5.2.13
-	if ($background_col) { $bg_c = $this->SetColor($background_col, 'CodeOnly'); }
+	if ($background_col) { $bg_c = Color::setColor($background_col, 'CodeOnly'); }
 	else { $bg_c = $this->form_background_color; }
-	if ($border_col) { $bc_c = $this->SetColor($border_col, 'CodeOnly'); }
+	if ($border_col) { $bc_c = Color::setColor($border_col, 'CodeOnly'); }
 	else { $bc_c = $this->form_border_color; }
 	$f = array(	'n'	 => $this->formn,
 			'typ' 	 => 'Tx',
@@ -32833,9 +32753,9 @@ function SetFormText( $w, $h, $name, $value = '', $default = '', $title = '', $f
 		if ( $checked ) { $activ = 1; }
 		else { $activ = 0; }
 		// mPDF 5.2.13
-		if ($background_col) { $bg_c = $this->SetColor($background_col, 'CodeOnly'); }
+		if ($background_col) { $bg_c = Color::setColor($background_col, 'CodeOnly'); }
 		else { $bg_c = $this->form_button_background_color; }
-		if ($border_col) { $bc_c = $this->SetColor($border_col, 'CodeOnly'); }
+		if ($border_col) { $bc_c = Color::setColor($border_col, 'CodeOnly'); }
 		else { $bc_c = $this->form_button_border_color; }
 		$f = array(	'n'	=> $this->formn,
 			'typ' 	=> 'Bt',
