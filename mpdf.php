@@ -1299,7 +1299,6 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	else {
 		$this->setMBencoding('UTF-8');	// sets $this->mb_enc
 	}
-	@mb_regex_encoding('UTF-8'); 
 
 
 	// Adobe CJK fonts
@@ -1595,13 +1594,10 @@ function RestrictUnicodeFonts($res) {
 
 
 function setMBencoding($enc) {
-@mb_regex_encoding('UTF-8'); 
-	$curr = $this->mb_enc;
-	$this->mb_enc = $enc; 
-	if (!$this->mb_enc || $curr != $this->mb_enc) { 
-		mb_internal_encoding($this->mb_enc); 
-		if ($enc == 'UTF-8') { @mb_regex_encoding('UTF-8'); }
-//		else if ($enc == 'windows-1252') { @mb_regex_encoding('ISO-8859-1'); }
+	@mb_regex_encoding('UTF-8');
+	if ($this->mb_enc != $enc) {
+	    mb_internal_encoding($enc); 
+	    $this->mb_enc = $enc;
 	}
 }
 
@@ -19583,7 +19579,7 @@ function CloseTag($tag)
 	$this->$ltag = false;
     }
 
-	$tags = array('FONT', 'SPAN', 'CODE', 'KBD', 'SAMP', 'TT', 'VAR', 'INS', 'STRONG', 'CITE', 'SUB'
+	$tags = array('FONT', 'SPAN', 'CODE', 'KBD', 'SAMP', 'TT', 'VAR', 'INS', 'STRONG', 'CITE', 'SUB',
 				  'SUP', 'S', 'STRIKE', 'DEL', 'Q', 'EM', 'B', 'I', 'U', 'SMALL', 'BIG', 'ACRONYM');
 	
 	if (in_array($tag, $tags)) {
@@ -24768,7 +24764,7 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 	else if ($bord){
 	   if (!$bSeparate && $buffer) {
 		$priority = 'LRTB';
-		for($p=0;$p<strlen($priority);$p++) {
+		for($p=0, $plen=strlen($priority); $p<$plen; $p++) {
 			$side = $priority[$p];
 			$details['p'] = $side ;
 
@@ -24866,9 +24862,9 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 
 	   $x2 = $x + $w; $y2 = $y + $h;
 	   $oldlinewidth = $this->LineWidth;
-
-	   for($p=0;$p<strlen($priority);$p++) {
-		$side = $priority[$p];
+	   
+	   for($p=0, $plen=strlen($priority); $p<$plen; $p++) {
+	    $side = $priority[$p];
 		$xadj = 0;
 		$xadj2 = 0;
 		$yadj = 0;
