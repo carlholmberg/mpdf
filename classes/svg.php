@@ -11,6 +11,8 @@
 // NB UNITS - Works in pixels as main units - converting to PDF units when outputing to PDF string
 // and on returning size
 
+require_once('helpers.php');
+
 class SVG {
 
 	var $svg_gradient;	//	array - contient les infos sur les gradient fill du svg classé par id du svg
@@ -654,8 +656,8 @@ class SVG {
 			}
 		}
 
-		$svg_w = $this->mpdf_ref->ConvertSize($attribs['width']);	// mm (interprets numbers as pixels)
-		$svg_h = $this->mpdf_ref->ConvertSize($attribs['height']);	// mm
+		$svg_w = Numeric::convertSize($attribs['width'], $this->mpdf_ref->dpi);	// mm (interprets numbers as pixels)
+		$svg_h = Numeric::convertSize($attribs['height'], $this->mpdf_ref->dpi);	// mm
 
 ///*
 		// mPDF 5.0.005
@@ -1637,7 +1639,7 @@ function Arcto($x1, $y1, $x2, $y2, $rx, $ry, $angle, $largeArcFlag, $sweepFlag) 
 		$maxsize *= (25.4/$this->mpdf_ref->dpi);	// convert pixels to mm
 		$fontsize=$this->mpdf_ref->FontSize;
 		//Return as pixels
-		$size = $this->mpdf_ref->ConvertSize($size,$maxsize,$fontsize,false) * 1/(25.4/$this->mpdf_ref->dpi);
+		$size = Numeric::convertSize($size,$this->mpdf_ref->dpi,$maxsize,$fontsize,false) * 1/(25.4/$this->mpdf_ref->dpi);
 		return $size;
 	}
 
@@ -1649,7 +1651,7 @@ function Arcto($x1, $y1, $x2, $y2, $rx, $ry, $angle, $largeArcFlag, $sweepFlag) 
 	// Setting e.g. margin % will use maxsize (pagewidth) and em will use fontsize
 		$maxsize=$this->mpdf_ref->FontSize;
 		//Return as pts
-		$size = $this->mpdf_ref->ConvertSize($size,$maxsize,false,true) * 72/25.4;
+		$size = Numeric::convertSize($size,$this->mpdf_ref->dpi,$maxsize,false,true) * 72/25.4;
 		return $size;
 	}
 

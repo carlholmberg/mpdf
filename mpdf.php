@@ -2956,13 +2956,11 @@ function SetFont($family,$style='',$size=0, $write=true, $forcewrite=false) {
 			$this->pageoutput[$this->page]['Font'] = $fontout;
 		}
 
-
-
 		// Added - currentfont (lowercase) used in HTML2PDF
 		$this->currentfontfamily=$family;
 		$this->currentfontsize=$size;
 		$this->currentfontstyle=$style.($this->U ? 'U' : '').($this->S ? 'S' : '');
-		$this->setMBencoding('UTF-8');
+		//$this->setMBencoding('UTF-8');
 	}
 
 	else { 	// if using core fonts
@@ -2971,7 +2969,7 @@ function SetFont($family,$style='',$size=0, $write=true, $forcewrite=false) {
 		if ($this->PDFA || $this->PDFX) {
 			$this->Error('Core Adobe fonts cannot be embedded in mPDF (required for PDFA1-b or PDFX/1-a) - cannot use option to use core fonts.');
 		}
-		$this->setMBencoding('windows-1252');
+		//$this->setMBencoding('windows-1252');
 
 		//Test if font is already selected
 		if(($this->FontFamily == $family) AND ($this->FontStyle == $style) AND ($this->FontSizePt == $size) && !$forcewrite) {
@@ -3025,6 +3023,13 @@ function SetFont($family,$style='',$size=0, $write=true, $forcewrite=false) {
 
 	}
 
+	if ($this->onlyCoreFonts) {
+		$this->setMBencoding('windows-1252');	// sets $this->mb_enc
+	}
+	else {
+		$this->setMBencoding('UTF-8');	// sets $this->mb_enc
+	}
+	
 	return $family;
 }
 
